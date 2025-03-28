@@ -1,241 +1,128 @@
 import os
-import io
-import tempfile
-import logging
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 def generate_scoring_guide(results, project_path):
-    """
-    Generate a PDF scoring guide based on the analysis results.
-
-    Args:
-        results (dict): Analysis results from the BDD framework analyzer
-        project_path (str): Path to the analyzed project
-
-    Returns:
-        str: Path to the generated PDF file
-    """
-    # Extract the project name from the path (final part of the path)
-    project_name = os.path.basename(project_path)
-
-    # Force the project name to be just the last part of the path, no matter what
-    if '\\' in project_path:
-        project_name = project_path.split('\\')[-1]
-    elif '/' in project_path:
-        project_name = project_path.split('/')[-1]
-
-    logger.debug("Generating scoring guide PDF")
-
-    # Check if results is None
-    if not results or 'test_coverage' not in results:
-        # Create a sample empty results structure
-        results = {
-            'overall_score': 0,
-            'feature_files': {
-                'count': 0,
-                'quality_score': 0,
-                'issues': ['No analysis results available'],
-                'metrics': {}
-            },
-            'step_definitions': {
-                'count': 0,
-                'quality_score': 0,
-                'issues': ['No analysis results available'],
-                'metrics': {}
-            },
-            'test_coverage': {
-                'score': 0,
-                'issues': ['No analysis results available'],
-                'metrics': {}
-            },
-            'framework_structure': {
-                'score': 0,
-                'issues': ['No analysis results available'],
-                'metrics': {'found_directories': 0, 'expected_directories': []}
-            },
-            'recommendations': ['Run a project analysis to get personalized recommendations'],
-            'selenium_implementation': {
-                'wait_strategy': 0,
-                'explicit_waits': False,
-                'custom_wait_conditions': False,
-                'screenshot_capability': False,
-                'webdriver_management': False,
-                'actions_class_usage': False,
-                'javascript_executor': False
-            },
-            'browser_execution': {
-                'browser_compatibility': 0,
-                'grid_support': False,
-                'parallel_execution': False,
-                'retry_mechanism': False
-            }
-        }
-
-    # Create a temporary file for the PDF
-    temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-    pdf_path = temp_file.name
-    temp_file.close()
-
-    # Create PDF document
-    doc = SimpleDocTemplate(
-        pdf_path,
-        pagesize=letter,
-        rightMargin=72,
-        leftMargin=72,
-        topMargin=72,
-        bottomMargin=72
-    )
-
-    # Get styles
+    """Generate a PDF scoring guide for the BDD framework analysis."""
+    output_path = 'scoring_guide.pdf'
+    doc = SimpleDocTemplate(output_path, pagesize=letter)
     styles = getSampleStyleSheet()
-
-    # Create custom styles
-    title_style = ParagraphStyle(
-        'Title',
-        parent=styles['Title'],
-        fontSize=24,
-        textColor=colors.purple,
-        spaceAfter=12
-    )
-
-    heading_style = ParagraphStyle(
-        'Heading',
-        parent=styles['Heading2'],
-        fontSize=14,
-        textColor=colors.purple,
-        spaceAfter=6
-    )
-
-    subheading_style = ParagraphStyle(
-        'Subheading',
-        parent=styles['Heading3'],
-        fontSize=12,
-        textColor=colors.purple,
-        spaceAfter=6
-    )
-
-    normal_style = styles['Normal']
-
-    # Build document content
-    content = []
+    story = []
 
     # Title
-    content.append(Paragraph("BDD Framework Scoring Guide", title_style))
-    content.append(Spacer(1, 0.25 * inch))
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30
+    )
+    story.append(Paragraph('BDD Framework Analysis Report', title_style))
+    story.append(Spacer(1, 12))
 
-    # Project info
-    content.append(Paragraph(f"Project: {project_name}", normal_style))
-    content.append(Paragraph(f"Overall Score: {results['overall_score']}/100", heading_style))
-    content.append(Spacer(1, 0.2 * inch))
+    # Project Info
+    story.append(Paragraph(f'Project: {os.path.basename(project_path)}', styles['Heading2']))
+    story.append(Spacer(1, 12))
 
-    # Summary of scores
-    data = [
-        ["Category", "Score"],
-        ["Feature Files", f"{results['feature_files']['quality_score']}/100"],
-        ["Step Definitions", f"{results['step_definitions']['quality_score']}/100"],
-        ["Test Coverage", f"{results['test_coverage']['score']}/100"],
-        ["Framework Structure", f"{results['framework_structure']['score']}/100"]
+    # Overall Score
+    story.append(Paragraph(f'Overall Score: {results["overall_score"]}/100', styles['Heading2']))
+    story.append(Spacer(1, 12))
+
+    # Feature Files Analysis
+    story.append(Paragraph('Feature Files Analysis', styles['Heading2']))
+    feature_data = [
+        ['Metric', 'Value'],
+        ['Count', str(results['feature_files']['count'])],
+        ['Quality Score', f"{results['feature_files']['quality_score']}/100"]
+    ]
+    if results['feature_files']['issues']:
+        feature_data.append(['Issues', '\n'.join(results['feature_files']['issues'])])
+
+    feature_table = Table(feature_data, colWidths=[2*inch, 4*inch])
+    feature_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(feature_table)
+    story.append(Spacer(1, 12))
+
+    # Step Definitions Analysis
+    story.append(Paragraph('Step Definitions Analysis', styles['Heading2']))
+    step_data = [
+        ['Metric', 'Value'],
+        ['Count', str(results['step_definitions']['count'])],
+        ['Quality Score', f"{results['step_definitions']['quality_score']}/100"]
+    ]
+    if results['step_definitions']['issues']:
+        step_data.append(['Issues', '\n'.join(results['step_definitions']['issues'])])
+
+    step_table = Table(step_data, colWidths=[2*inch, 4*inch])
+    step_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(step_table)
+    story.append(Spacer(1, 12))
+
+    # Framework Structure
+    story.append(Paragraph('Framework Structure', styles['Heading2']))
+    structure_data = [
+        ['Component', 'Status'],
+        ['Page Objects', str(results['framework_structure'].get('page_objects', 'N/A'))],
+        ['Test Data', str(results['framework_structure'].get('test_data', 'N/A'))],
+        ['Config Files', str(results['framework_structure'].get('config_files', 'N/A'))]
     ]
 
-    # Create table with scores
-    table = Table(data, colWidths=[3 * inch, 1 * inch])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.lavender),
-        ('TEXTCOLOR', (0, 0), (1, 0), colors.purple),
-        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (1, 0), 12),
-        ('GRID', (0, 0), (-1, -1), 1, colors.purple),
+    structure_table = Table(structure_data, colWidths=[2*inch, 4*inch])
+    structure_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
     ]))
+    story.append(structure_table)
+    story.append(Spacer(1, 12))
 
-    content.append(table)
-    content.append(Spacer(1, 0.3 * inch))
-
-    # Feature Files Section
-    content.append(Paragraph("Feature Files Analysis", heading_style))
-    content.append(Paragraph(f"Found {results['feature_files']['count']} feature files", normal_style))
-
-    if results.get('feature_files', {}).get('metrics', {}).get('scenarios_count'):
-        metrics = results['feature_files']['metrics']
-        content.append(Paragraph(f"• Total scenarios: {metrics['scenarios_count']}", normal_style))
-        content.append(Paragraph(f"• Scenarios with examples: {metrics.get('scenarios_with_examples', 0)}", normal_style))
-        content.append(Paragraph(f"• Scenarios with tags: {metrics.get('scenarios_with_tags', 0)}", normal_style))
-
-    if results['feature_files']['issues']:
-        content.append(Paragraph("Issues:", subheading_style))
-        for issue in results['feature_files']['issues'][:5]:  # Limit to top 5 issues
-            content.append(Paragraph(f"• {issue}", normal_style))
-
-    content.append(Spacer(1, 0.2 * inch))
-
-    # Step Definitions Section
-    content.append(Paragraph("Step Definitions Analysis", heading_style))
-    content.append(Paragraph(f"Found {results['step_definitions']['count']} step definition files", normal_style))
-
-    if results.get('step_definitions', {}).get('metrics', {}).get('total_steps'):
-        metrics = results['step_definitions']['metrics']
-        content.append(Paragraph(f"• Total step definitions: {metrics['total_steps']}", normal_style))
-        content.append(Paragraph(f"• Parameterized steps: {metrics.get('parameterized_steps', 0)}", normal_style))
-        param_ratio = metrics.get('parameterized_steps', 0) / max(metrics.get('total_steps', 1), 1) * 100
-        content.append(Paragraph(f"• Parameterization ratio: {param_ratio:.1f}%", normal_style))
-
-    if results['step_definitions']['issues']:
-        content.append(Paragraph("Issues:", subheading_style))
-        for issue in results['step_definitions']['issues'][:5]:  # Limit to top 5 issues
-            content.append(Paragraph(f"• {issue}", normal_style))
-
-    content.append(Spacer(1, 0.2 * inch))
-
-    # Test Coverage Section
-    content.append(Paragraph("Test Coverage Analysis", heading_style))
-
-    # Add test coverage metrics if available
-    if 'test_coverage' in results:
-        if results['test_coverage'].get('issues'):
-            content.append(Paragraph("Issues:", subheading_style))
-            for issue in results['test_coverage']['issues']:
-                content.append(Paragraph(f"• {issue}", normal_style))
-        
-        metrics = results['test_coverage'].get('metrics', {})
-        if metrics:
-            if 'steps_to_features_ratio' in metrics:
-                content.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", normal_style))
-
-            if metrics.get('missing_points', 0) > 0:
-                content.append(Paragraph("Coverage Loss Details:", subheading_style))
-                content.append(Paragraph(f"Missing {metrics['missing_points']}% in Test Coverage due to:", normal_style))
-                for reason in metrics.get('missing_reasons', []):
-                    content.append(Paragraph(f"• {reason}", normal_style))
-    else:
-        content.append(Paragraph("No detailed metrics available for test coverage", normal_style))
-
-    if results['test_coverage']['issues']:
-        content.append(Paragraph("Issues:", subheading_style))
-        for issue in results['test_coverage']['issues']:
-            content.append(Paragraph(f"• {issue}", normal_style))
-
-    content.append(Spacer(1, 0.2 * inch))
 
     # Selenium Implementation Section
-    content.append(Paragraph("Selenium Implementation", heading_style))
+    story.append(Paragraph("Selenium Implementation", styles['Heading2']))
 
     # Add Selenium metrics
     selenium_metrics = [
-        ("Wait Strategy", f"{results['selenium_implementation']['wait_strategy']}%"),
-        ("Explicit Waits", "✓ Found" if results['selenium_implementation']['explicit_waits'] else "✗ Missing"),
-        ("Custom Wait Conditions", "✓ Found" if results['selenium_implementation']['custom_wait_conditions'] else "✗ Missing"),
-        ("Screenshot Capability", "✓ Found" if results['selenium_implementation']['screenshot_capability'] else "✗ Missing"),
-        ("WebDriver Management", "✓ Found" if results['selenium_implementation']['webdriver_management'] else "✗ Missing"),
-        ("Actions Class Usage", "✓ Found" if results['selenium_implementation']['actions_class_usage'] else "✗ Missing"),
-        ("JavaScript Executor", "✓ Found" if results['selenium_implementation']['javascript_executor'] else "✗ Missing")
+        ["Wait Strategy", f"{results['selenium_implementation']['wait_strategy']}%"],
+        ["Explicit Waits", "✓ Found" if results['selenium_implementation']['explicit_waits'] else "✗ Missing"],
+        ["Custom Wait Conditions", "✓ Found" if results['selenium_implementation']['custom_wait_conditions'] else "✗ Missing"],
+        ["Screenshot Capability", "✓ Found" if results['selenium_implementation']['screenshot_capability'] else "✗ Missing"],
+        ["WebDriver Management", "✓ Found" if results['selenium_implementation']['webdriver_management'] else "✗ Missing"],
+        ["Actions Class Usage", "✓ Found" if results['selenium_implementation']['actions_class_usage'] else "✗ Missing"],
+        ["JavaScript Executor", "✓ Found" if results['selenium_implementation']['javascript_executor'] else "✗ Missing"]
     ]
 
     selenium_table = Table(selenium_metrics, colWidths=[3 * inch, 1 * inch])
@@ -245,17 +132,17 @@ def generate_scoring_guide(results, project_path):
         ('ALIGN', (1, 0), (1, -1), 'CENTER'),
     ]))
 
-    content.append(selenium_table)
-    content.append(Spacer(1, 0.2 * inch))
+    story.append(selenium_table)
+    story.append(Spacer(1, 0.2 * inch))
 
     # Browser Execution Section
-    content.append(Paragraph("Browser Execution Analysis", heading_style))
+    story.append(Paragraph("Browser Execution Analysis", styles['Heading2']))
 
     browser_metrics = [
-        ("Browser Compatibility", f"{results['browser_execution']['browser_compatibility']}%"),
-        ("Grid Support", "Implemented" if results['browser_execution']['grid_support'] else "Missing"),
-        ("Parallel Execution", "Implemented" if results['browser_execution']['parallel_execution'] else "Missing"),
-        ("Retry Mechanism", "Implemented" if results['browser_execution']['retry_mechanism'] else "Missing")
+        ["Browser Compatibility", f"{results['browser_execution']['browser_compatibility']}%"],
+        ["Grid Support", "Implemented" if results['browser_execution']['grid_support'] else "Missing"],
+        ["Parallel Execution", "Implemented" if results['browser_execution']['parallel_execution'] else "Missing"],
+        ["Retry Mechanism", "Implemented" if results['browser_execution']['retry_mechanism'] else "Missing"]
     ]
 
     browser_table = Table(browser_metrics, colWidths=[3 * inch, 1 * inch])
@@ -265,58 +152,61 @@ def generate_scoring_guide(results, project_path):
         ('ALIGN', (1, 0), (1, -1), 'CENTER'),
     ]))
 
-    content.append(browser_table)
-    content.append(Spacer(1, 0.2 * inch))
+    story.append(browser_table)
+    story.append(Spacer(1, 0.2 * inch))
 
-    # Framework Structure Section
-    content.append(Paragraph("Framework Structure Analysis", heading_style))
 
-    if results['framework_structure']['metrics'].get('expected_directories'):
-        metrics = results['framework_structure']['metrics']
-        found = metrics['found_directories']
-        expected = len(metrics['expected_directories'])
-        content.append(Paragraph(f"• Found {found} out of {expected} recommended directories", normal_style))
-        content.append(Paragraph(f"• Has configuration files: {'Yes' if metrics.get('has_config') else 'No'}", normal_style))
+    # Test Coverage Section (adapted from original)
+    story.append(Paragraph("Test Coverage Analysis", styles['Heading2']))
 
-    if results['framework_structure']['issues']:
-        content.append(Paragraph("Issues:", subheading_style))
-        for issue in results['framework_structure']['issues']:
-            content.append(Paragraph(f"• {issue}", normal_style))
+    if 'test_coverage' in results:
+        if results['test_coverage'].get('issues'):
+            story.append(Paragraph("Issues:", styles['Heading3']))
+            for issue in results['test_coverage']['issues']:
+                story.append(Paragraph(f"• {issue}", styles['Normal']))
 
-    content.append(Spacer(1, 0.3 * inch))
+        metrics = results['test_coverage'].get('metrics', {})
+        if metrics:
+            if 'steps_to_features_ratio' in metrics:
+                story.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", styles['Normal']))
 
-    # Recommendations Section
-    content.append(Paragraph("Recommendations", heading_style))
+            if metrics.get('missing_points', 0) > 0:
+                story.append(Paragraph("Coverage Loss Details:", styles['Heading3']))
+                story.append(Paragraph(f"Missing {metrics['missing_points']}% in Test Coverage due to:", styles['Normal']))
+                for reason in metrics.get('missing_reasons', []):
+                    story.append(Paragraph(f"• {reason}", styles['Normal']))
+    else:
+        story.append(Paragraph("No detailed metrics available for test coverage", styles['Normal']))
+
+    story.append(Spacer(1, 0.2 * inch))
+
+
+    # Recommendations Section (from original)
+    story.append(Paragraph("Recommendations", styles['Heading2']))
 
     if results['recommendations']:
         for i, recommendation in enumerate(results['recommendations'], 1):
-            content.append(Paragraph(f"{i}. {recommendation}", normal_style))
-            content.append(Spacer(1, 0.1 * inch))
+            story.append(Paragraph(f"{i}. {recommendation}", styles['Normal']))
+            story.append(Spacer(1, 0.1 * inch))
     else:
-        content.append(Paragraph("No specific recommendations at this time.", normal_style))
+        story.append(Paragraph("No specific recommendations at this time.", styles['Normal']))
 
-    # Team02 Enhancers Section
-    content.append(Spacer(1, 0.3 * inch))
-    content.append(Paragraph("Team02 Project Analysis", heading_style))
+    # Team02 Enhancers Section (from original)
+    story.append(Spacer(1, 0.3 * inch))
+    story.append(Paragraph("Team02 Project Analysis", styles['Heading2']))
 
     # Add details about Team02 structure
-    content.append(Paragraph("Project Structure:", subheading_style))
-    content.append(Paragraph("• Maven-based Selenium test automation project", normal_style))
-    content.append(Paragraph("• TestNG configuration present", normal_style))
-    content.append(Paragraph("• Organized in standard Maven directory layout", normal_style))
+    story.append(Paragraph("Project Structure:", styles['Heading3']))
+    story.append(Paragraph("• Maven-based Selenium test automation project", styles['Normal']))
+    story.append(Paragraph("• TestNG configuration present", styles['Normal']))
+    story.append(Paragraph("• Organized in standard Maven directory layout", styles['Normal']))
 
     # Add findings about implementation
-    content.append(Paragraph("Implementation Details:", subheading_style))
-    content.append(Paragraph("• Step definitions located in stepDefinitions folder", normal_style))
-    content.append(Paragraph("• Uses TestNG for test execution framework", normal_style))
-    content.append(Paragraph("• Selenium WebDriver implementation found", normal_style))
+    story.append(Paragraph("Implementation Details:", styles['Heading3']))
+    story.append(Paragraph("• Step definitions located in stepDefinitions folder", styles['Normal']))
+    story.append(Paragraph("• Uses TestNG for test execution framework", styles['Normal']))
+    story.append(Paragraph("• Selenium WebDriver implementation found", styles['Normal']))
 
     # Build the PDF
-    try:
-        doc.build(content)
-        logger.debug(f"PDF generated successfully at {pdf_path}")
-        return pdf_path
-
-    except Exception as e:
-        logger.error(f"Error generating PDF: {str(e)}")
-        raise
+    doc.build(story)
+    return output_path
