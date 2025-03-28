@@ -197,7 +197,29 @@ def generate_scoring_guide(results, project_path):
             story.append(Paragraph(f"{i}. {recommendation}", styles['Normal']))
             story.append(Spacer(1, 0.1 * inch))
     else:
-        story.append(Paragraph("No specific recommendations at this time.", styles['Normal']))
+        recommendations = []
+        
+        # Generate recommendations based on scores
+        if results['feature_files']['quality_score'] < 70:
+            recommendations.append("Improve feature file quality by adding proper descriptions and tags")
+        if results['step_definitions']['quality_score'] < 70:
+            recommendations.append("Enhance step definitions with better parameterization")
+        if results['framework_structure']['score'] < 70:
+            recommendations.append("Organize project structure into standard BDD directories")
+        if results.get('selenium_implementation', {}).get('wait_strategy', 0) < 70:
+            recommendations.append("Implement better wait strategies in Selenium tests")
+        if not results.get('browser_execution', {}).get('parallel_execution', False):
+            recommendations.append("Consider implementing parallel test execution")
+        if not results.get('page_objects', {}).get('base_page_pattern', False):
+            recommendations.append("Implement base page pattern for better maintainability")
+            
+        # Display generated recommendations
+        if recommendations:
+            for i, recommendation in enumerate(recommendations, 1):
+                story.append(Paragraph(f"{i}. {recommendation}", styles['Normal']))
+                story.append(Spacer(1, 0.1 * inch))
+        else:
+            story.append(Paragraph("No specific recommendations at this time.", styles['Normal']))
 
     # Team02 Enhancers Section (from original)
     story.append(Spacer(1, 0.3 * inch))
