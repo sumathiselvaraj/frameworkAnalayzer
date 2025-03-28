@@ -290,20 +290,29 @@ def analyze_step_definitions(project_path, results):
 
     # Count all step definition files including nested ones
     step_files_count = 0
+    step_files = set()
+    
+    # Common step definition patterns
+    patterns = [
+        '*Steps*',
+        '*StepDefinition*',
+        '*Step_Definition*',
+        '*StepDef*',
+        '*_steps*',
+        '*_step_definitions*',
+        '*stepdef*',
+        '*Batch*Steps*',
+        '*TestSteps*',
+        '*Validation*'
+    ]
+    
+    # Search for files with these patterns
     for ext in ['.py', '.js', '.ts', '.rb', '.java', '.cs']:
-        # Look for step definition files with *Steps.java pattern
-        java_steps = list(project_path.glob(f'**/*Steps{ext}'))
-        # Look for other step definition files
-        batch_files = list(project_path.glob(f'**/*Batch*{ext}'))
-        validation_files = list(project_path.glob(f'**/*Validation{ext}'))
-
-        # Add all unique files to count
-        step_files = set()
-        step_files.update(java_steps)
-        step_files.update(batch_files)
-        step_files.update(validation_files)
-
-        step_files_count += len(step_files)
+        for pattern in patterns:
+            found_files = list(project_path.glob(f'**/{pattern}{ext}'))
+            step_files.update(found_files)
+    
+    step_files_count = len(step_files)
 
     # If using sample project, return the actual count from screenshot
     if using_sample:
