@@ -114,15 +114,18 @@ def generate_scoring_guide(results, project_path):
     # Selenium Implementation Section
     story.append(Paragraph("Selenium Implementation", styles['Heading2']))
 
+    # Get selenium implementation data with defaults
+    selenium_impl = results.get('selenium_implementation', {})
+    
     # Add Selenium metrics
     selenium_metrics = [
-        ["Wait Strategy", f"{results['selenium_implementation']['wait_strategy']}%"],
-        ["Explicit Waits", "✓ Found" if results['selenium_implementation']['explicit_waits'] else "✗ Missing"],
-        ["Custom Wait Conditions", "✓ Found" if results['selenium_implementation']['custom_wait_conditions'] else "✗ Missing"],
-        ["Screenshot Capability", "✓ Found" if results['selenium_implementation']['screenshot_capability'] else "✗ Missing"],
-        ["WebDriver Management", "✓ Found" if results['selenium_implementation']['webdriver_management'] else "✗ Missing"],
-        ["Actions Class Usage", "✓ Found" if results['selenium_implementation']['actions_class_usage'] else "✗ Missing"],
-        ["JavaScript Executor", "✓ Found" if results['selenium_implementation']['javascript_executor'] else "✗ Missing"]
+        ["Wait Strategy", f"{selenium_impl.get('wait_strategy', 0)}%"],
+        ["Explicit Waits", "✓ Found" if selenium_impl.get('explicit_waits', False) else "✗ Missing"],
+        ["Custom Wait Conditions", "✓ Found" if selenium_impl.get('custom_wait_conditions', False) else "✗ Missing"],
+        ["Screenshot Capability", "✓ Found" if selenium_impl.get('screenshot_capability', False) else "✗ Missing"],
+        ["WebDriver Management", "✓ Found" if selenium_impl.get('webdriver_management', False) else "✗ Missing"],
+        ["Actions Class Usage", "✓ Found" if selenium_impl.get('actions_class_usage', False) else "✗ Missing"],
+        ["JavaScript Executor", "✓ Found" if selenium_impl.get('javascript_executor', False) else "✗ Missing"]
     ]
 
     selenium_table = Table(selenium_metrics, colWidths=[3 * inch, 1 * inch])
