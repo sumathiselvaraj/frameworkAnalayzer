@@ -26,18 +26,12 @@ def analyze_bdd_framework(project_path):
     # Validate path exists
     path = Path(project_path)
 
-    # If path doesn't exist or is not a valid path, use the sample project
+    # Validate and use the provided project path
     global using_sample
     using_sample = False
     if not path.exists():
-        logger.warning(f"Project path not accessible: {project_path}. Using sample project instead.")
-        sample_path = os.path.join(os.getcwd(), "sample_bdd_project")
-        if os.path.exists(sample_path):
-            path = Path(sample_path)
-            using_sample = True
-            logger.info(f"Using sample project at: {sample_path}")
-        else:
-            raise FileNotFoundError(f"Neither provided path nor sample project exists. Please check path or contact support.")
+        logger.error(f"Project path not accessible: {project_path}")
+        raise FileNotFoundError(f"Project path does not exist. Please provide a valid path.")
 
     # Initialize results dictionary
     results = {
