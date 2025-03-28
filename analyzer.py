@@ -288,11 +288,15 @@ def analyze_step_definitions(project_path, results):
         step_files.extend(list(project_path.glob(f'**/*steps*{ext}')))
         step_files.extend(list(project_path.glob(f'**/*step_definitions*{ext}')))
 
-    # If using sample project, simulate the actual count regardless of path
-    if using_sample:
-        results['step_definitions']['count'] = 14  # As per user's actual project
-    else:
-        results['step_definitions']['count'] = len(step_files)
+    # Count all step definition files including nested ones
+    step_files_count = 0
+    for ext in ['.py', '.js', '.ts', '.rb', '.java', '.cs']:
+        java_steps = list(project_path.glob(f'**/*Steps{ext}'))
+        feature_steps = list(project_path.glob(f'**/*Feature{ext}'))
+        definition_steps = list(project_path.glob(f'**/*StepDefinition{ext}'))
+        step_files_count += len(java_steps) + len(feature_steps) + len(definition_steps)
+
+    results['step_definitions']['count'] = step_files_count
 
     if len(step_files) == 0:
         results['step_definitions']['issues'].append("No step definition files found")
