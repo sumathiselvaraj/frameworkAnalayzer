@@ -1461,9 +1461,12 @@ def analyze_project_enhancers(results, project_path):
         try:
             with open(pom_file, 'r', encoding='utf-8') as f:
                 pom_content = f.read().lower()
-                # Check for TestNG
-                # Check for TestNG configuration - only require testng.xml
-                testng_xml_exists = os.path.exists(os.path.join(project_path, 'testng.xml'))
+                # Check for TestNG configuration
+                testng_xml_exists = False
+                for root, _, files in os.walk(project_path):
+                    if 'testng.xml' in files:
+                        testng_xml_exists = True
+                        break
                 enhancers['testng_config'] = testng_xml_exists
                 # Check for logging frameworks
                 if any(logger in pom_content for logger in ['log4j', 'slf4j', 'logback']):
