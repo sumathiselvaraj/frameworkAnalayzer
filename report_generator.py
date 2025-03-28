@@ -181,6 +181,19 @@ def generate_scoring_guide(results, project_path):
     # Test Coverage Section
     content.append(Paragraph("Test Coverage Analysis", heading_style))
     
+    # Add test coverage metrics if available
+    if 'metrics' in results['test_coverage']:
+        metrics = results['test_coverage']['metrics']
+        if 'steps_to_features_ratio' in metrics:
+            content.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", normal_style))
+        
+        if 'missing_points' in metrics and metrics['missing_points'] > 0:
+            content.append(Paragraph("Coverage Loss Details:", subheading_style))
+            content.append(Paragraph(f"Missing {metrics['missing_points']}% in Test Coverage due to:", normal_style))
+            if 'missing_reasons' in metrics:
+                for reason in metrics['missing_reasons']:
+                    content.append(Paragraph(f"• {reason}", normal_style))
+    
     if results['test_coverage']['issues']:
         content.append(Paragraph("Issues:", subheading_style))
         for issue in results['test_coverage']['issues']:
