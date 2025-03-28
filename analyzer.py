@@ -1460,11 +1460,32 @@ def analyze_project_enhancers(results, project_path):
     if os.path.exists(os.path.join(project_path, 'testng.xml')):
         enhancers['testng_config'] = True
 
-    # Look for common patterns in source files
+    # Look for common patterns in source files and pom.xml
+    pom_path = os.path.join(project_path, 'pom.xml')
+    if os.path.exists(pom_path):
+        try:
+            with open(pom_path, 'r', encoding='utf-8') as f:
+                pom_content = f.read()
+                # Check dependencies in pom.xml
+                if 'org.testng' in pom_content:
+                    enhancers['testng_config'] = True
+                if 'log4j' in pom_content or 'slf4j' in pom_content:
+                    enhancers['logging_implementation'] = True
+                if 'apache.poi' in pom_content:
+                    enhancers['data_driven_testing'] = True
+                if 'extentreports' in pom_content:
+                    enhancers['custom_reporting'] = True
+        except Exception as e:
+            logger.error(f"Error reading pom.xml: {str(e)}")
+
     for root, _, files in os.walk(project_path):
         for file in files:
             file_path = os.path.join(root, file)
             try:
+                # Skip binary files and specific file types
+                if file.endswith(('.xlsx', '.png', '.jpg', '.pdf', '.exe', '.jar')):
+                    continue
+                    
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
@@ -1477,22 +1498,28 @@ def analyze_project_enhancers(results, project_path):
                     # Check for logging
                     if ('LoggerLoad' in content or 
                         'log4j' in content or 
-                        'import org.apache.logging.log4j' in content):
+                        'import org.apache.logging.log4j' in content or
+                        'import org.slf4j' in content):
                         enhancers['logging_implementation'] = True
 
                     # Check for data driven testing with Excel
                     if ('ExcelReader' in content or
                         'apache.poi' in content or
-                        'XSSFWorkbook' in content):
+                        'XSSFWorkbook' in content or
+                        'XSSFSheet' in content or
+                        'FileInputStream' in content):
                         enhancers['data_driven_testing'] = True
 
                     # Check for custom reporting
                     if ('ExtentReports' in content or 
-                        'import com.aventstack.extentreports' in content):
+                        'extent.html' in content or
+                        'import com.aventstack.extentreports' in content or
+                        'ExtentTest' in content):
                         enhancers['custom_reporting'] = True
 
             except Exception as e:
-                logger.error(f"Error reading file {file_path}: {str(e)}")
+                # Skip file reading errors for binary files
+                continue
 
     results['project_enhancers'] = enhancers
 
