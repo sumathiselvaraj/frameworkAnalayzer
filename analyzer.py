@@ -143,7 +143,7 @@ def analyze_bdd_framework(project_path):
         analyze_project_strengths(results)
 
         # Analyze project enhancers
-        analyze_project_enhancers(results)
+        analyze_project_enhancers(results, project_path)
 
         # Generate recommendations
         generate_recommendations(results)
