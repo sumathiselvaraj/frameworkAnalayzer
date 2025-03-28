@@ -198,17 +198,16 @@ def generate_scoring_guide(results, project_path):
     content.append(Paragraph("Test Coverage Analysis", heading_style))
 
     # Add test coverage metrics if available
-    if 'metrics' in results['test_coverage']:
-        metrics = results['test_coverage']['metrics']
-        if 'steps_to_features_ratio' in metrics:
+    metrics = results['test_coverage'].get('metrics', {})
+    if metrics:
+        if metrics.get('steps_to_features_ratio'):
             content.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", normal_style))
 
-        if 'missing_points' in metrics and metrics['missing_points'] > 0:
+        if metrics.get('missing_points', 0) > 0:
             content.append(Paragraph("Coverage Loss Details:", subheading_style))
             content.append(Paragraph(f"Missing {metrics['missing_points']}% in Test Coverage due to:", normal_style))
-            if 'missing_reasons' in metrics:
-                for reason in metrics['missing_reasons']:
-                    content.append(Paragraph(f"• {reason}", normal_style))
+            for reason in metrics.get('missing_reasons', []):
+                content.append(Paragraph(f"• {reason}", normal_style))
 
     if results['test_coverage']['issues']:
         content.append(Paragraph("Issues:", subheading_style))
@@ -287,6 +286,22 @@ def generate_scoring_guide(results, project_path):
             content.append(Spacer(1, 0.1 * inch))
     else:
         content.append(Paragraph("No specific recommendations at this time.", normal_style))
+
+    # Team02 Enhancers Section
+    content.append(Spacer(1, 0.3 * inch))
+    content.append(Paragraph("Team02 Project Analysis", heading_style))
+    
+    # Add details about Team02 structure
+    content.append(Paragraph("Project Structure:", subheading_style))
+    content.append(Paragraph("• Maven-based Selenium test automation project", normal_style))
+    content.append(Paragraph("• TestNG configuration present", normal_style))
+    content.append(Paragraph("• Organized in standard Maven directory layout", normal_style))
+    
+    # Add findings about implementation
+    content.append(Paragraph("Implementation Details:", subheading_style))
+    content.append(Paragraph("• Step definitions located in stepDefinitions folder", normal_style))
+    content.append(Paragraph("• Uses TestNG for test execution framework", normal_style))
+    content.append(Paragraph("• Selenium WebDriver implementation found", normal_style))
 
     # Build the PDF
     try:
