@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - BDD Framework Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 7L12 12M12 12L7 17M12 12L7 7M12 12L17 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                BDD Framework Analyzer
+            </h1>
+            <p>Analysis Results</p>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container results-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="analyzer-card">
+                <h2 class="card-title">Analysis Results for: {{ project_path }}</h2>
+                
+                <!-- Overall Score -->
+                <div class="score-card">
+                    <div class="score-value">{{ results.overall_score }}</div>
+                    <div class="score-details">
+                        <h3 class="score-title">Overall Score</h3>
+                        <p class="score-description">This score reflects the overall quality of your BDD framework implementation.</p>
+                    </div>
+                </div>
+                
+                <!-- Feature Files Score -->
+                <div class="score-card">
+                    <div class="score-value">{{ results.feature_files.quality_score }}</div>
+                    <div class="score-details">
+                        <h3 class="score-title">Feature Files</h3>
+                        <p class="score-description">We analyzed {{ results.feature_files.count }} feature files.</p>
+                        
+                        {% if results.feature_files.metrics %}
+                        <ul class="metric-list">
+                            <li class="metric-item">Total scenarios: {{ results.feature_files.metrics.scenarios_count }}</li>
+                            <li class="metric-item">Scenarios with examples: {{ results.feature_files.metrics.scenarios_with_examples }}</li>
+                            <li class="metric-item">Scenarios with tags: {{ results.feature_files.metrics.scenarios_with_tags }}</li>
+                        </ul>
+                        {% endif %}
+                        
+                        {% if results.feature_files.issues %}
+                        <h4 class="issues-heading">Issues:</h4>
+                        <ul class="issues-list">
+                            {% for issue in results.feature_files.issues %}
+                            <li class="issue-item">{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Step Definitions Score -->
+                <div class="score-card">
+                    <div class="score-value">{{ results.step_definitions.quality_score }}</div>
+                    <div class="score-details">
+                        <h3 class="score-title">Step Definitions</h3>
+                        <p class="score-description">We analyzed {{ results.step_definitions.count }} step definition files.</p>
+                        
+                        {% if results.step_definitions.metrics %}
+                        <ul class="metric-list">
+                            <li class="metric-item">Total step definitions: {{ results.step_definitions.metrics.total_steps }}</li>
+                            <li class="metric-item">Parameterized steps: {{ results.step_definitions.metrics.parameterized_steps }}</li>
+                            {% if results.step_definitions.metrics.total_steps > 0 %}
+                            <li class="metric-item">Parameterization ratio: {{ (results.step_definitions.metrics.parameterized_steps / results.step_definitions.metrics.total_steps * 100)|round(1) }}%</li>
+                            {% endif %}
+                        </ul>
+                        {% endif %}
+                        
+                        {% if results.step_definitions.issues %}
+                        <h4 class="issues-heading">Issues:</h4>
+                        <ul class="issues-list">
+                            {% for issue in results.step_definitions.issues %}
+                            <li class="issue-item">{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Test Coverage Score -->
+                <div class="score-card">
+                    <div class="score-value">{{ results.test_coverage.score }}</div>
+                    <div class="score-details">
+                        <h3 class="score-title">Test Coverage</h3>
+                        <p class="score-description">This score represents how well your step definitions cover your feature scenarios.</p>
+                        
+                        {% if results.test_coverage.issues %}
+                        <h4 class="issues-heading">Issues:</h4>
+                        <ul class="issues-list">
+                            {% for issue in results.test_coverage.issues %}
+                            <li class="issue-item">{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Framework Structure Score -->
+                <div class="score-card">
+                    <div class="score-value">{{ results.framework_structure.score }}</div>
+                    <div class="score-details">
+                        <h3 class="score-title">Framework Structure</h3>
+                        <p class="score-description">This score evaluates the organization and architecture of your BDD framework.</p>
+                        
+                        {% if results.framework_structure.metrics %}
+                        <ul class="metric-list">
+                            <li class="metric-item">Found {{ results.framework_structure.metrics.found_directories }} out of {{ results.framework_structure.metrics.expected_directories|length }} recommended directories</li>
+                            <li class="metric-item">Has configuration files: {{ "Yes" if results.framework_structure.metrics.has_config else "No" }}</li>
+                        </ul>
+                        {% endif %}
+                        
+                        {% if results.framework_structure.issues %}
+                        <h4 class="issues-heading">Issues:</h4>
+                        <ul class="issues-list">
+                            {% for issue in results.framework_structure.issues %}
+                            <li class="issue-item">{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations -->
+            {% if results.recommendations %}
+            <div class="recommendations-card">
+                <h2 class="recommendations-title">Recommendations</h2>
+                <ol class="recommendations-list">
+                    {% for recommendation in results.recommendations %}
+                    <li>{{ recommendation }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Analyze Another Project
+                </a>
+                
+                <a href="{{ url_for('download_guide') }}" class="btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 17L12 3M12 17L8 13M12 17L16 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L2 18C2 19.6569 3.34315 21 5 21L19 21C20.6569 21 22 19.6569 22 18L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Download Scoring Guide
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
