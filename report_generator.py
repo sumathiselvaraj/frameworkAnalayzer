@@ -38,7 +38,7 @@ def generate_scoring_guide(results, project_path):
         ['Quality Score', f"{results['feature_files']['quality_score']}/100"]
     ]
     if results['feature_files']['issues']:
-        feature_data.append(['Issues', '\n'.join(results['feature_files']['issues'])])
+        feature_data.append(['Issues', Paragraph('\n'.join('• ' + issue for issue in results['feature_files']['issues']), styles['Normal'])])
 
     feature_table = Table(feature_data, colWidths=[2*inch, 4*inch])
     feature_table.setStyle(TableStyle([
@@ -65,7 +65,7 @@ def generate_scoring_guide(results, project_path):
         ['Quality Score', f"{results['step_definitions']['quality_score']}/100"]
     ]
     if results['step_definitions']['issues']:
-        step_data.append(['Issues', '\n'.join(results['step_definitions']['issues'])])
+        step_data.append(['Issues', Paragraph('\n'.join('• ' + issue for issue in results['step_definitions']['issues']), styles['Normal'])])
 
     step_table = Table(step_data, colWidths=[2*inch, 4*inch])
     step_table.setStyle(TableStyle([
