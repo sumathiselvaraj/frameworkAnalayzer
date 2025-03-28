@@ -1433,13 +1433,13 @@ def analyze_project_strengths(results):
         'version_control': True,
         'clear_naming': True
     }
-    
+
     # Analyze positive aspects of the framework
     strengths['documentation'] = os.path.exists('README.md')
     strengths['ci_ready'] = os.path.exists('pom.xml') and os.path.exists('testng.xml')
     strengths['maintainable'] = results['code_quality']['naming_conventions'] > 60
     strengths['scalable'] = results['framework_architecture']['framework_scalability']
-    
+
     results['project_strengths'] = strengths
 
 def analyze_project_enhancers(results):
@@ -1452,19 +1452,19 @@ def analyze_project_enhancers(results):
         'data_driven_testing': False,
         'custom_reporting': False
     }
-    
+
     # Check for Maven structure
     if os.path.exists('pom.xml'):
         enhancers['maven_structure'] = True
-        
+
     # Check for TestNG configuration
     if os.path.exists('testng.xml'):
         enhancers['testng_config'] = True
-        
+
     # Check for Maven structure
     if os.path.exists(os.path.join(project_path, 'pom.xml')):
         enhancers['maven_structure'] = True
-        
+
     # Check for TestNG configuration
     if os.path.exists(os.path.join(project_path, 'testng.xml')):
         enhancers['testng_config'] = True
@@ -1476,34 +1476,32 @@ def analyze_project_enhancers(results):
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                    
+
                     # Check for PageFactory
                     if ('PageFactory.initElements' in content or 
                         '@FindBy' in content or
                         'import org.openqa.selenium.support.PageFactory' in content):
                         enhancers['page_factory'] = True
-                        
+
                     # Check for logging
                     if ('LoggerLoad' in content or 
                         'log4j' in content or 
                         'import org.apache.logging.log4j' in content):
                         enhancers['logging_implementation'] = True
-                        
+
                     # Check for data driven testing with Excel
                     if ('ExcelReader' in content or
                         'apache.poi' in content or
                         'XSSFWorkbook' in content):
                         enhancers['data_driven_testing'] = True
-                        
+
                     # Check for custom reporting
                     if ('ExtentReports' in content or 
                         'import com.aventstack.extentreports' in content):
                         enhancers['custom_reporting'] = True
-                        
+
             except Exception as e:
                 logger.error(f"Error reading file {file_path}: {str(e)}")
-                except Exception as e:
-                    logger.error(f"Error reading file {file}: {str(e)}")
 
     results['project_enhancers'] = enhancers
 
