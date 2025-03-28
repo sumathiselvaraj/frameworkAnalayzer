@@ -1175,24 +1175,13 @@ def analyze_browser_execution(project_path, results):
                             parallel_execution = False  # Set to false since found but may not be properly implemented
                             break
 
-                # Check for retry mechanism - must have both RetryAnalyzer and proper TestNG config
+                # Check for retry mechanism
                 if not retry_mechanism:
-                    has_retry_analyzer = False
-                    has_retry_config = False
+                    # Look for RetryAnalyzer implementation and usage
+                    if re.search(r'implements\s+IRetryAnalyzer', content) and \
+                       re.search(r'retry\s*\(\s*ITestResult', content):
+                        retry_mechanism = True
 
-                    # Check for RetryAnalyzer implementation
-                    for pattern in retry_patterns:
-                        if re.search(pattern, content):
-                            has_retry_analyzer = True
-                            break
-
-                    # Look specifically for TestNG retry configuration
-                    if re.search(r'setRetryAnalyzer|IRetryAnalyzer', content) and \
-                       re.search(r'@Test\s*\([^)]*retryAnalyzer', content):
-                        has_retry_config = True
-
-                    # Only set retry_mechanism to true if both conditions are met
-                    retry_mechanism = has_retry_analyzer and has_retry_config
         except Exception as e:
             logger.error(f"Error analyzing browser execution in {file_path}: {str(e)}")
 
