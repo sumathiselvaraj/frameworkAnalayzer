@@ -11,10 +11,8 @@ import org.testng.annotations.DataProvider;
     plugin = {
         "pretty",
         "html:target/cucumber-reports/cucumber-pretty.html",
-        "json:target/cucumber-reports/CucumberTestReport.json",
-        "rerun:target/failed_scenarios.txt"
-    },
-    monochrome = true
+        "json:target/cucumber-reports/CucumberTestReport.json"
+    }
 )
 public class TestRunner extends AbstractTestNGCucumberTests {
     @Override

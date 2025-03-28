@@ -9,6 +9,9 @@ import java.lang.reflect.Method;
 public class RetryConfig implements IAnnotationTransformer {
     @Override
     public void transform(ITestAnnotation annotation, Class testClass, Constructor testConstructor, Method testMethod) {
+        // Set retry analyzer for all test methods
         annotation.setRetryAnalyzer(RetryAnalyzer.class);
+        // Enable parallel execution
+        annotation.setParallel(true);
     }
 }
