@@ -429,11 +429,11 @@ def analyze_step_definitions(project_path, results):
 
 def analyze_framework_structure(project_path, results):
     """Analyze the overall structure of the BDD framework."""
-    expected_dirs = ['features', 'step_definitions', 'support', 'reports']
+    recommended_dirs = ['stepDefinitions', 'step_definitions', 'support', 'reports']
     found_dirs = 0
 
     # Check for common BDD framework directories
-    for dir_name in expected_dirs:
+    for dir_name in recommended_dirs:
         if any(d.name.lower() == dir_name.lower() for d in project_path.glob('**') if d.is_dir()):
             found_dirs += 1
 
@@ -458,7 +458,7 @@ def analyze_framework_structure(project_path, results):
             found_config_files = ['config.properties', 'extent.properties', 'log4j2.properties']
 
     # Calculate structure score
-    dir_score = (found_dirs / len(expected_dirs)) * 80
+    dir_score = (found_dirs / len(recommended_dirs)) * 80
     config_score = 20 if config_files else 0
 
     structure_score = dir_score + config_score
@@ -466,11 +466,11 @@ def analyze_framework_structure(project_path, results):
     results['framework_structure']['score'] = round(min(100, structure_score))
     results['framework_structure']['issues'] = issues
     results['framework_structure']['metrics'] = {
-        'expected_directories': expected_dirs,
+        'expected_directories': recommended_dirs,
         'found_directories': found_dirs,
         'has_config': bool(config_files),
         'found_config_files': found_config_files,
-        'missing_directories': [d for d in expected_dirs if not any(directory.name.lower() == d.lower() for directory in project_path.glob('**') if directory.is_dir())]
+        'missing_directories': [d for d in recommended_dirs if not any(directory.name.lower() == d.lower() for directory in project_path.glob('**') if directory.is_dir())]
     }
 
 def calculate_test_coverage(results):
@@ -1178,13 +1178,13 @@ def analyze_browser_execution(project_path, results):
                         re.search(r'@Retry', content) or
                         re.search(r'setRetryAnalyzer', content)
                     )
-                    
+
                     has_retry_config = (
                         re.search(r'@Test\s*\([^)]*retryAnalyzer', content) or
                         re.search(r'retryCount|maxRetryCount', content) or
                         re.search(r'retry-count|retry_count', content)
                     )
-                    
+
                     retry_mechanism = has_retry_analyzer and has_retry_config
 
         except Exception as e:
