@@ -415,30 +415,74 @@ def calculate_test_coverage(results):
     """Calculate the test coverage score based on other metrics."""
     feature_score = results['feature_files']['quality_score']
     steps_score = results['step_definitions']['quality_score']
+    steps_to_features_ratio = 0  # Initialize this variable to avoid 'possibly unbound' error
+    coverage_score = 0  # Initialize coverage_score
+    issues = []  # Initialize issues
+    coverage_loss_reasons = []  # Initialize coverage_loss_reasons
     
     # Simple heuristic to estimate coverage
     if results['feature_files']['count'] == 0 or results['step_definitions']['count'] == 0:
         coverage_score = 0
         issues = ["Missing either feature files or step definitions, cannot determine coverage"]
+        coverage_loss_reasons = ["No feature files or step definitions found"]
     else:
         # Calculate ratio of step definitions to feature files as a rough coverage metric
         steps_to_features_ratio = results['step_definitions']['count'] / results['feature_files']['count']
         
         coverage_base = (feature_score + steps_score) / 2
+        coverage_loss_reasons = []
+        
+        # Determine reasons for coverage loss
+        if feature_score < 90:
+            feature_loss = 90 - feature_score
+            coverage_loss_reasons.append(f"Feature files quality issues (-{feature_loss}%): Missing tags, examples, or proper descriptions")
+        
+        if steps_score < 90:
+            steps_loss = 90 - steps_score
+            coverage_loss_reasons.append(f"Step definitions quality issues (-{steps_loss}%): Limited parameterization or too many steps in single files")
         
         # Adjust based on ratio (ideally around 1:1 or higher)
-        if steps_to_features_ratio < 0.5:
+        if steps_to_features_ratio < 0.7:
             coverage_score = coverage_base * 0.7
             issues = ["Possible insufficient step definitions for feature coverage"]
+            coverage_loss_reasons.append(f"Insufficient step definitions compared to features (-{round((coverage_base * 0.3))}%): " + 
+                                        f"Only {results['step_definitions']['count']} step files for {results['feature_files']['count']} feature files")
         elif steps_to_features_ratio > 3:
             coverage_score = coverage_base * 0.9
             issues = ["Many step definitions compared to features - possible over-engineering"]
+            coverage_loss_reasons.append(f"Overengineered step definitions (-{round((coverage_base * 0.1))}%): " +
+                                       f"{results['step_definitions']['count']} step files for only {results['feature_files']['count']} feature files")
         else:
             coverage_score = coverage_base
             issues = []
+        
+        # If the scenario quality from BDD implementation is low, add that as a reason
+        if 'bdd_implementation' in results and results['bdd_implementation'].get('scenario_quality', 100) < 70:
+            scenario_quality_loss = int((70 - results['bdd_implementation'].get('scenario_quality', 0)) / 2)
+            if scenario_quality_loss > 0:
+                coverage_loss_reasons.append(f"Low scenario quality (-{scenario_quality_loss}%): Feature scenarios lack proper structure or clarity")
     
-    results['test_coverage']['score'] = round(min(100, coverage_score))
+    # Calculate the final coverage score
+    final_coverage_score = round(min(100, coverage_score))
+    missing_points = 100 - final_coverage_score
+    
+    # Set the results with detailed explanations
+    results['test_coverage']['score'] = final_coverage_score
     results['test_coverage']['issues'] = issues
+    
+    # Compute the final metrics
+    metrics = {
+        'missing_points': missing_points,
+        'missing_reasons': coverage_loss_reasons
+    }
+    
+    # Only add steps_to_features_ratio if we calculated it (i.e., both feature files and step definitions exist)
+    if results['feature_files']['count'] > 0 and results['step_definitions']['count'] > 0:
+        metrics['steps_to_features_ratio'] = round(steps_to_features_ratio, 2)
+    else:
+        metrics['steps_to_features_ratio'] = 0
+    
+    results['test_coverage']['metrics'] = metrics
 
 def generate_recommendations(results):
     """Generate recommendations based on the analysis results."""

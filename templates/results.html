@@ -107,6 +107,23 @@
                         <h3 class="score-title">Test Coverage</h3>
                         <p class="score-description">This score represents how well your step definitions cover your feature scenarios.</p>
                         
+                        {% if results.test_coverage.metrics %}
+                        <ul class="metric-list">
+                            <li class="metric-item">Step definitions to features ratio: {{ results.test_coverage.metrics.steps_to_features_ratio }}</li>
+                            
+                            {% if results.test_coverage.metrics.missing_points > 0 %}
+                            <li class="metric-item">
+                                <strong>Missing {{ results.test_coverage.metrics.missing_points }}% in Test Coverage due to:</strong>
+                                <ul class="nested-list">
+                                    {% for reason in results.test_coverage.metrics.missing_reasons %}
+                                    <li>{{ reason }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        {% endif %}
+                        
                         {% if results.test_coverage.issues %}
                         <h4 class="issues-heading">Issues:</h4>
                         <ul class="issues-list">
