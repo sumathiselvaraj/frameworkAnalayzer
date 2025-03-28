@@ -1078,8 +1078,17 @@ def analyze_selenium_implementation(project_path, results):
 def analyze_browser_execution(project_path, results):
     """Analyze browser execution capabilities."""
     code_files = []
+    config_files = []  # Initialize config_files list
+    
+    # Get code files
     for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
         code_files.extend(list(project_path.glob(f'**/*{ext}')))
+        
+    # Get config files
+    config_files.extend(list(project_path.glob('**/*config*.json')))
+    config_files.extend(list(project_path.glob('**/*config*.yaml')))
+    config_files.extend(list(project_path.glob('**/*config*.yml')))
+    config_files.extend(list(project_path.glob('**/*.properties')))
 
     # Default values
     browser_compatibility = 75  # Set to 75% as per image
