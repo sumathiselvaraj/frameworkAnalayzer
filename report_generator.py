@@ -25,6 +25,13 @@ def generate_scoring_guide(results, project_path):
     """
     # Extract the project name from the path (final part of the path)
     project_name = os.path.basename(project_path)
+    
+    # Force the project name to be just the last part of the path, no matter what
+    if '\\' in project_path:
+        project_name = project_path.split('\\')[-1]
+    elif '/' in project_path:
+        project_name = project_path.split('/')[-1]
+        
     logger.debug("Generating scoring guide PDF")
     
     # Check if results is None

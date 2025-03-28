@@ -36,6 +36,12 @@ def analyze():
         # Extract the final part of the path to use as project name
         project_name = os.path.basename(project_path)
         
+        # Force the project name to be just the last part of the path, no matter what
+        if '\\' in project_path:
+            project_name = project_path.split('\\')[-1]
+        elif '/' in project_path:
+            project_name = project_path.split('/')[-1]
+        
         # Store results in session for later use
         session['analysis_results'] = results
         session['project_path'] = project_path
@@ -56,7 +62,16 @@ def health_overview():
     # Get results from session if available
     results = session.get('analysis_results')
     project_path = session.get('project_path', 'Unknown Project')
-    project_name = session.get('project_name', os.path.basename(project_path))
+    project_name = session.get('project_name')
+    
+    # If project_name is not in session, extract it from path
+    if not project_name:
+        project_name = os.path.basename(project_path)
+        # Force the project name to be just the last part of the path, no matter what
+        if '\\' in project_path:
+            project_name = project_path.split('\\')[-1]
+        elif '/' in project_path:
+            project_name = project_path.split('/')[-1]
     
     if not results:
         flash('Please analyze a project first', 'error')
@@ -71,7 +86,16 @@ def download_guide():
         # Get results from session if available
         results = session.get('analysis_results')
         project_path = session.get('project_path', 'Unknown Project')
-        project_name = session.get('project_name', os.path.basename(project_path))
+        project_name = session.get('project_name')
+        
+        # If project_name is not in session, extract it from path
+        if not project_name:
+            project_name = os.path.basename(project_path)
+            # Force the project name to be just the last part of the path, no matter what
+            if '\\' in project_path:
+                project_name = project_path.split('\\')[-1]
+            elif '/' in project_path:
+                project_name = project_path.split('/')[-1]
         
         # Generate PDF guide
         pdf_path = generate_scoring_guide(results, project_path)
