@@ -432,8 +432,22 @@ def analyze_framework_structure(project_path, results):
 
 def calculate_test_coverage(results):
     """Calculate the test coverage score based on other metrics."""
-    feature_score = results['feature_files']['quality_score']
-    steps_score = results['step_definitions']['quality_score']
+    # Initialize metrics if they don't exist
+    if 'metrics' not in results['feature_files']:
+        results['feature_files']['metrics'] = {
+            'scenarios_count': 0,
+            'scenarios_with_examples': 0,
+            'scenarios_with_tags': 0
+        }
+    
+    if 'metrics' not in results['step_definitions']:
+        results['step_definitions']['metrics'] = {
+            'total_steps': 0,
+            'parameterized_steps': 0
+        }
+
+    feature_score = results['feature_files'].get('quality_score', 0)
+    steps_score = results['step_definitions'].get('quality_score', 0)
     steps_to_features_ratio = 0  # Initialize this variable to avoid 'possibly unbound' error
     coverage_score = 0  # Initialize coverage_score
     issues = []  # Initialize issues
