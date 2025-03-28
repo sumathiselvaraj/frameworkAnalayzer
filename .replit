@@ -43,6 +43,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "mvn clean test -DsuiteXmlFile=testng.xml"
 
+[[workflows.workflow]]
+name = "Analyze Project"
+author = 40937650
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python analyzer.py /home/runner/workspace/sample_bdd_project"
+
 [[ports]]
 localPort = 5000
 externalPort = 80

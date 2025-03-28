@@ -29,7 +29,7 @@ def analyze_bdd_framework(project_path):
     # If path doesn't exist or is not a valid path, use the sample project
     global using_sample
     using_sample = False
-    if not path.exists() or project_path.startswith(("C:", "/Users")):
+    if not path.exists():
         logger.warning(f"Project path not accessible: {project_path}. Using sample project instead.")
         sample_path = os.path.join(os.getcwd(), "sample_bdd_project")
         if os.path.exists(sample_path):
@@ -1079,11 +1079,11 @@ def analyze_browser_execution(project_path, results):
     """Analyze browser execution capabilities."""
     code_files = []
     config_files = []  # Initialize config_files list
-    
+
     # Get code files
     for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
         code_files.extend(list(project_path.glob(f'**/*{ext}')))
-        
+
     # Get config files
     config_files.extend(list(project_path.glob('**/*config*.json')))
     config_files.extend(list(project_path.glob('**/*config*.yaml')))

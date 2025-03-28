@@ -24,31 +24,31 @@ def analyze():
     Returns analysis results or error message.
     """
     project_path = request.form.get('project_path')
-    
+
     if not project_path:
         flash('Please enter a project path', 'error')
         return redirect(url_for('index'))
-    
+
     try:
         logger.debug(f"Analyzing project at path: {project_path}")
         results = analyze_bdd_framework(project_path)
-        
+
         # Extract the final part of the path to use as project name
         project_name = os.path.basename(project_path)
-        
+
         # Force the project name to be just the last part of the path, no matter what
         if '\\' in project_path:
             project_name = project_path.split('\\')[-1]
         elif '/' in project_path:
             project_name = project_path.split('/')[-1]
-        
+
         # Store results in session for later use
         session['analysis_results'] = results
         session['project_path'] = project_path
         session['project_name'] = project_name
-        
+
         return render_template('results.html', results=results, project_path=project_path, project_name=project_name)
-    
+
     except Exception as e:
         logger.error(f"Error analyzing project: {str(e)}")
         flash(f'Error analyzing project: {str(e)}', 'error')
@@ -63,7 +63,7 @@ def health_overview():
     results = session.get('analysis_results')
     project_path = session.get('project_path', 'Unknown Project')
     project_name = session.get('project_name')
-    
+
     # If project_name is not in session, extract it from path
     if not project_name:
         project_name = os.path.basename(project_path)
@@ -72,11 +72,11 @@ def health_overview():
             project_name = project_path.split('\\')[-1]
         elif '/' in project_path:
             project_name = project_path.split('/')[-1]
-    
+
     if not results:
         flash('Please analyze a project first', 'error')
         return redirect(url_for('index'))
-    
+
     return render_template('health_overview.html', results=results, project_path=project_path, project_name=project_name)
 
 @app.route('/download-guide')
@@ -87,7 +87,7 @@ def download_guide():
         results = session.get('analysis_results')
         project_path = session.get('project_path', 'Unknown Project')
         project_name = session.get('project_name')
-        
+
         # If project_name is not in session, extract it from path
         if not project_name:
             project_name = os.path.basename(project_path)
@@ -96,16 +96,16 @@ def download_guide():
                 project_name = project_path.split('\\')[-1]
             elif '/' in project_path:
                 project_name = project_path.split('/')[-1]
-        
+
         # Generate PDF guide
         pdf_path = generate_scoring_guide(results, project_path)
-        
+
         return send_file(
             pdf_path,
             as_attachment=True,
             download_name=f'bdd_scoring_guide_{project_name}.pdf'
         )
-    
+
     except Exception as e:
         logger.error(f"Error generating scoring guide: {str(e)}")
         flash(f'Error generating scoring guide: {str(e)}', 'error')
@@ -116,14 +116,14 @@ def api_analyze():
     """API endpoint for analyzing BDD framework."""
     data = request.json
     project_path = data.get('project_path')
-    
+
     if not project_path:
         return jsonify({'error': 'Project path is required'}), 400
-    
+
     try:
         results = analyze_bdd_framework(project_path)
         return jsonify({'results': results})
-    
+
     except Exception as e:
         logger.error(f"API error: {str(e)}")
         return jsonify({'error': str(e)}), 500
