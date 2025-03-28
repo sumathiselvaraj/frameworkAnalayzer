@@ -34,6 +34,15 @@ task = "shell.exec"
 args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "Run Tests"
+author = 40937650
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean test -DsuiteXmlFile=testng.xml"
+
 [[ports]]
 localPort = 5000
 externalPort = 80

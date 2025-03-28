@@ -6,7 +6,7 @@ import io.cucumber.testng.CucumberOptions;
 import org.testng.annotations.DataProvider;
 
 @CucumberOptions(
-    features = "features",
+    features = "src/test/resources/features",
     glue = {"stepdefs"},
     plugin = {
         "pretty",

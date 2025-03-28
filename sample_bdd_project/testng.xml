@@ -1,0 +1,13 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="BDD Test Suite" parallel="methods" thread-count="3" data-provider-thread-count="3">
+    <listeners>
+        <listener class-name="utils.RetryConfig"/>
+    </listeners>
+    <test name="Cucumber Tests" preserve-order="true">
+        <classes>
+            <class name="runner.TestRunner"/>
+        </classes>
+    </test>
+</suite>
