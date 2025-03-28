@@ -12,10 +12,12 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
+
 @app.route('/')
 def index():
     """Render the main page of the BDD Framework Analyzer."""
     return render_template('index.html')
+
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -23,7 +25,7 @@ def analyze():
     Process the project path and analyze the BDD framework.
     Returns analysis results or error message.
     """
-    project_path = "sample_bdd_project"
+    project_path = "Team02_SeleniumNinjas"
 
     if not project_path:
         flash('Please enter a project path', 'error')
@@ -46,30 +48,42 @@ def analyze():
         serializable_results = {
             'overall_score': results['overall_score'],
             'feature_files': {
-                'count': results['feature_files']['count'],
-                'quality_score': results['feature_files']['quality_score'],
-                'issues': [str(issue) for issue in results['feature_files']['issues']]
+                'count':
+                results['feature_files']['count'],
+                'quality_score':
+                results['feature_files']['quality_score'],
+                'issues':
+                [str(issue) for issue in results['feature_files']['issues']]
             },
             'step_definitions': {
-                'count': results['step_definitions']['count'],
-                'quality_score': results['step_definitions']['quality_score'],
-                'issues': [str(issue) for issue in results['step_definitions']['issues']]
+                'count':
+                results['step_definitions']['count'],
+                'quality_score':
+                results['step_definitions']['quality_score'],
+                'issues': [
+                    str(issue)
+                    for issue in results['step_definitions']['issues']
+                ]
             },
             'framework_structure': results['framework_structure'],
             'test_coverage': results['test_coverage'],
             'framework_health': results['framework_health']
         }
-        
+
         session['analysis_results'] = serializable_results
         session['project_path'] = project_path
         session['project_name'] = project_name
 
-        return render_template('results.html', results=results, project_path=project_path, project_name=project_name)
+        return render_template('results.html',
+                               results=results,
+                               project_path=project_path,
+                               project_name=project_name)
 
     except Exception as e:
         logger.error(f"Error analyzing project: {str(e)}")
         flash(f'Error analyzing project: {str(e)}', 'error')
         return redirect(url_for('index'))
+
 
 @app.route('/health-overview')
 def health_overview():
@@ -94,7 +108,11 @@ def health_overview():
         flash('Please analyze a project first', 'error')
         return redirect(url_for('index'))
 
-    return render_template('health_overview.html', results=results, project_path=project_path, project_name=project_name)
+    return render_template('health_overview.html',
+                           results=results,
+                           project_path=project_path,
+                           project_name=project_name)
+
 
 @app.route('/download-guide')
 def download_guide():
@@ -117,16 +135,15 @@ def download_guide():
         # Generate PDF guide
         pdf_path = generate_scoring_guide(results, project_path)
 
-        return send_file(
-            pdf_path,
-            as_attachment=True,
-            download_name=f'bdd_scoring_guide_{project_name}.pdf'
-        )
+        return send_file(pdf_path,
+                         as_attachment=True,
+                         download_name=f'bdd_scoring_guide_{project_name}.pdf')
 
     except Exception as e:
         logger.error(f"Error generating scoring guide: {str(e)}")
         flash(f'Error generating scoring guide: {str(e)}', 'error')
         return redirect(url_for('index'))
+
 
 @app.route('/api/analyze', methods=['POST'])
 def api_analyze():
@@ -144,6 +161,7 @@ def api_analyze():
     except Exception as e:
         logger.error(f"API error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
