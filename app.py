@@ -44,6 +44,21 @@ def analyze():
         flash(f'Error analyzing project: {str(e)}', 'error')
         return redirect(url_for('index'))
 
+@app.route('/health-overview')
+def health_overview():
+    """
+    Show the Framework Health Overview dashboard.
+    """
+    # Get results from session if available
+    results = session.get('analysis_results')
+    project_path = session.get('project_path', 'Unknown Project')
+    
+    if not results:
+        flash('Please analyze a project first', 'error')
+        return redirect(url_for('index'))
+    
+    return render_template('health_overview.html', results=results, project_path=project_path)
+
 @app.route('/download-guide')
 def download_guide():
     """Generate and download the BDD framework scoring guide."""

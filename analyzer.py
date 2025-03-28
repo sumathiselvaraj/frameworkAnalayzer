@@ -46,6 +46,54 @@ def analyze_bdd_framework(project_path):
             'score': 0,
             'issues': []
         },
+        # New sections based on the framework health view
+        'bdd_implementation': {
+            'background_usage': False,
+            'scenario_quality': 0,
+            'total_scenarios': 0,
+            'empty_steps': 0
+        },
+        'framework_architecture': {
+            'base_class_implementation': False,
+            'data_driven_approach': False,
+            'framework_scalability': False,
+            'method_quality': 0
+        },
+        'code_quality': {
+            'naming_conventions': 0,
+            'unused_imports': 0,
+            'commented_code': 0,
+            'system_out_usage': 0,
+            'unused_variables': 0
+        },
+        'selenium_implementation': {
+            'wait_strategy': 0,
+            'explicit_waits': False,
+            'custom_wait_conditions': False,
+            'screenshot_capability': False,
+            'webdriver_management': False,
+            'actions_class_usage': False,
+            'javascript_executor': False
+        },
+        'browser_execution': {
+            'browser_compatibility': 0,
+            'grid_support': False,
+            'parallel_execution': False,
+            'retry_mechanism': False
+        },
+        'page_objects': {
+            'has_page_objects': False,
+            'total_page_objects': 0,
+            'base_page_pattern': False,
+            'proper_encapsulation': False
+        },
+        'framework_health': {
+            'selenium': 0,
+            'bdd': 0,
+            'code_quality': 0,
+            'structure': 0,
+            'code_health': 0
+        },
         'recommendations': []
     }
     
@@ -61,6 +109,27 @@ def analyze_bdd_framework(project_path):
         
         # Calculate test coverage
         calculate_test_coverage(results)
+        
+        # Analyze BDD implementation details
+        analyze_bdd_implementation(path, results)
+        
+        # Analyze framework architecture
+        analyze_framework_architecture(path, results)
+        
+        # Analyze code quality
+        analyze_code_quality(path, results)
+        
+        # Analyze selenium implementation
+        analyze_selenium_implementation(path, results)
+        
+        # Analyze browser execution
+        analyze_browser_execution(path, results)
+        
+        # Analyze page objects
+        analyze_page_objects(path, results)
+        
+        # Calculate framework health overview
+        calculate_framework_health(results)
         
         # Generate recommendations
         generate_recommendations(results)
@@ -324,18 +393,767 @@ def generate_recommendations(results):
     
     results['recommendations'] = recommendations
 
+def analyze_bdd_implementation(project_path, results):
+    """Analyze BDD implementation details."""
+    feature_files = list(project_path.glob('**/*.feature'))
+    
+    # Default values
+    background_usage = False
+    scenario_quality = 0
+    total_scenarios = 0
+    empty_steps = 0
+    
+    if feature_files:
+        # Check for background usage in feature files
+        for file_path in feature_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    
+                    # Check for Background sections
+                    if re.search(r'Background:', content):
+                        background_usage = True
+                    
+                    # Count total scenarios
+                    scenarios = re.findall(r'Scenario:|Scenario Outline:', content)
+                    total_scenarios += len(scenarios)
+                    
+                    # Look for empty steps (just comments or no implementation)
+                    steps = re.findall(r'(Given|When|Then|And|But)\s+[^\n]+', content)
+                    
+                    # This is an approximation - in a real analysis we'd check step definitions
+                    # for unimplemented steps, but here we're just checking for very short steps
+                    # as a proxy for empty/placeholder steps
+                    for step in steps:
+                        if len(step.strip()) < 15 or '...' in step or 'TODO' in step:
+                            empty_steps += 1
+            
+            except Exception as e:
+                logger.error(f"Error analyzing BDD implementation in {file_path}: {str(e)}")
+        
+        # Calculate scenario quality score based on metrics from feature files analysis
+        if 'feature_files' in results and 'metrics' in results['feature_files']:
+            metrics = results['feature_files']['metrics']
+            scenarios_count = metrics.get('scenarios_count', 0)
+            
+            if scenarios_count > 0:
+                # Calculate quality score based on tags and examples usage
+                tags_ratio = metrics.get('scenarios_with_tags', 0) / scenarios_count
+                examples_ratio = metrics.get('scenarios_with_examples', 0) / scenarios_count
+                
+                # Weighted score calculation
+                scenario_quality = int((tags_ratio * 0.5 + examples_ratio * 0.5) * 100)
+    
+    # Set the results
+    results['bdd_implementation']['background_usage'] = background_usage
+    results['bdd_implementation']['scenario_quality'] = scenario_quality
+    results['bdd_implementation']['total_scenarios'] = total_scenarios
+    results['bdd_implementation']['empty_steps'] = empty_steps
+
+def analyze_framework_architecture(project_path, results):
+    """Analyze framework architecture."""
+    # Look for base classes, data-driven approaches, and scalability patterns
+    code_files = []
+    for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
+        code_files.extend(list(project_path.glob(f'**/*{ext}')))
+    
+    # Default values
+    base_class_implementation = False
+    data_driven_approach = False
+    framework_scalability = False
+    method_quality = 0
+    
+    base_class_patterns = [
+        r'class\s+\w+Base', 
+        r'class\s+Base\w+',
+        r'abstract\s+class',
+        r'extends\s+\w+Base',
+        r'super\(',
+        r'super\.'
+    ]
+    
+    data_driven_patterns = [
+        r'@dataprovider',
+        r'@parametrized',
+        r'test_data',
+        r'readCsv',
+        r'readExcel',
+        r'dataProvider',
+        r'examples:',
+        r'Examples:',
+        r'Scenario Outline:',
+        r'<.*>'
+    ]
+    
+    scalability_patterns = [
+        r'ThreadLocal',
+        r'parallel',
+        r'Parallel',
+        r'[Ee]xecutor',
+        r'[Mm]ultithreaded',
+        r'[Cc]oncurrent',
+        r'[Ss]cale',
+        r'[Dd]istributed'
+    ]
+    
+    # Counters for method quality assessment
+    total_methods = 0
+    small_methods = 0  # Methods with reasonable length
+    
+    for file_path in code_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+                # Check for base class implementation
+                if not base_class_implementation:
+                    for pattern in base_class_patterns:
+                        if re.search(pattern, content):
+                            base_class_implementation = True
+                            break
+                
+                # Check for data-driven approach
+                if not data_driven_approach:
+                    for pattern in data_driven_patterns:
+                        if re.search(pattern, content):
+                            data_driven_approach = True
+                            break
+                
+                # Check for scalability patterns
+                if not framework_scalability:
+                    for pattern in scalability_patterns:
+                        if re.search(pattern, content):
+                            framework_scalability = True
+                            break
+                
+                # Method quality assessment - this is simplified
+                # Look for method/function definitions
+                method_matches = re.finditer(r'(?:def|function|public|private|protected)\s+\w+\s*\([^)]*\)\s*(?:\{|:)', content)
+                
+                for method_match in method_matches:
+                    total_methods += 1
+                    
+                    # Get method body to check size
+                    start_pos = method_match.end()
+                    
+                    # Find a simple approximation of method size - count lines until next method or end of file
+                    method_content = content[start_pos:].split('\n')
+                    line_count = 0
+                    
+                    for line in method_content:
+                        if re.match(r'(?:def|function|public|private|protected)\s+\w+\s*\(', line):
+                            break
+                        line_count += 1
+                    
+                    # Consider methods with fewer than 20 lines as good quality
+                    if line_count < 20:
+                        small_methods += 1
+                    
+        except Exception as e:
+            logger.error(f"Error analyzing framework architecture in {file_path}: {str(e)}")
+    
+    # Calculate method quality
+    if total_methods > 0:
+        method_quality = int((small_methods / total_methods) * 100)
+        # Cap at reasonable values
+        if method_quality > 0 and method_quality < 20:
+            method_quality = 20  # Minimum quality if we found methods
+    
+    # Set the results
+    results['framework_architecture']['base_class_implementation'] = base_class_implementation
+    results['framework_architecture']['data_driven_approach'] = data_driven_approach
+    results['framework_architecture']['framework_scalability'] = framework_scalability
+    results['framework_architecture']['method_quality'] = method_quality
+
+def analyze_code_quality(project_path, results):
+    """Analyze code quality metrics."""
+    code_files = []
+    for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
+        code_files.extend(list(project_path.glob(f'**/*{ext}')))
+    
+    # Default values
+    naming_conventions_score = 0
+    unused_imports = 0
+    commented_code = 0
+    system_out_usage = 0
+    unused_variables = 0
+    
+    # Patterns for analysis
+    import_patterns = {
+        '.py': r'import\s+[\w\.]+|from\s+[\w\.]+\s+import',
+        '.java': r'import\s+[\w\.]+;',
+        '.cs': r'using\s+[\w\.]+;',
+        '.js': r'(import|require)\s*\(',
+        '.ts': r'import\s+[\{\w\s\,\}]+\s+from',
+        '.rb': r'require\s+[\'"][\w\/]+[\'"]'
+    }
+    
+    system_out_patterns = {
+        '.py': r'print\s*\(',
+        '.java': r'System\.out|System\.err',
+        '.cs': r'Console\.(Write|WriteLine)',
+        '.js': r'console\.(log|error|warn|info)',
+        '.ts': r'console\.(log|error|warn|info)',
+        '.rb': r'puts|print|p\s+'
+    }
+    
+    # Track good and bad variable names
+    total_variables = 0
+    good_variables = 0
+    
+    for file_path in code_files:
+        ext = file_path.suffix
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                lines = content.split('\n')
+                used_imports = set()
+                declared_imports = set()
+                
+                # Check for imports
+                if ext in import_patterns:
+                    imports = re.findall(import_patterns[ext], content)
+                    for imp in imports:
+                        # Extract just the module/class name for simplicity
+                        match = re.search(r'[\w\.]+$', imp)
+                        if match:
+                            declared_imports.add(match.group())
+                
+                # For each line, check for system out usage
+                for line in lines:
+                    # Skip empty lines and full-line comments
+                    if not line.strip() or line.strip().startswith(('#', '//', '/*', '*', '*/')):
+                        continue
+                    
+                    # Check for system.out usage
+                    if ext in system_out_patterns and re.search(system_out_patterns[ext], line):
+                        system_out_usage += 1
+                    
+                    # Check for commented code (lines with code-like patterns after comment markers)
+                    if (('//' in line and re.search(r'//.*?[\w\s]+\(.*?\)', line)) or
+                        ('#' in line and re.search(r'#.*?[\w\s]+\(.*?\)', line))):
+                        commented_code += 1
+                    
+                    # Check for variable names and naming conventions
+                    # This is highly simplified - real analysis would be language-specific
+                    var_declarations = re.finditer(r'(?:var|let|const|private|public|protected)?\s+([a-zA-Z_]\w*)\s*(?:=|:)', line)
+                    for var_match in var_declarations:
+                        var_name = var_match.group(1)
+                        total_variables += 1
+                        
+                        # Check naming convention - assume camelCase or snake_case is good
+                        if (re.match(r'^[a-z][a-zA-Z0-9]*$', var_name) or  # camelCase
+                            re.match(r'^[a-z][a-z0-9_]*$', var_name)):     # snake_case
+                            good_variables += 1
+                        
+                        # Check for unused variables - simplified approach
+                        # In a real analyzer, we'd build a proper AST
+                        var_usage = re.search(fr'{re.escape(var_name)}\W', content[var_match.end():])
+                        if not var_usage:
+                            unused_variables += 1
+                
+                # Check for every import if it's used in the code
+                for imp in declared_imports:
+                    base_name = imp.split('.')[-1]
+                    if base_name not in content[content.find(imp) + len(imp):]:
+                        unused_imports += 1
+                
+        except Exception as e:
+            logger.error(f"Error analyzing code quality in {file_path}: {str(e)}")
+    
+    # Calculate naming conventions score
+    if total_variables > 0:
+        naming_conventions_score = int((good_variables / total_variables) * 100)
+        # Ensure a reasonable minimum score
+        if naming_conventions_score > 0 and naming_conventions_score < 30:
+            naming_conventions_score = 30
+    else:
+        naming_conventions_score = 65  # Default if no variables found
+    
+    # Set the results
+    results['code_quality']['naming_conventions'] = naming_conventions_score
+    results['code_quality']['unused_imports'] = unused_imports
+    results['code_quality']['commented_code'] = commented_code
+    results['code_quality']['system_out_usage'] = system_out_usage
+    results['code_quality']['unused_variables'] = unused_variables
+
+def analyze_selenium_implementation(project_path, results):
+    """Analyze Selenium implementation details."""
+    code_files = []
+    for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
+        code_files.extend(list(project_path.glob(f'**/*{ext}')))
+    
+    # Default values
+    wait_strategy = 0
+    explicit_waits = False
+    custom_wait_conditions = False
+    screenshot_capability = False
+    webdriver_management = False
+    actions_class_usage = False
+    javascript_executor = False
+    wait_types_found = []  # Initialize wait_types_found to avoid 'possibly unbound' error
+    
+    # Patterns for Selenium-specific features
+    selenium_patterns = {
+        'explicit_waits': [
+            r'WebDriverWait', 
+            r'wait\.until', 
+            r'ExpectedConditions',
+            r'FluentWait'
+        ],
+        'custom_wait': [
+            r'class\s+\w+Wait',
+            r'extends\s+ExpectedCondition',
+            r'implements\s+ExpectedCondition',
+            r'def\s+wait_for_',
+            r'function\s+waitFor'
+        ],
+        'screenshot': [
+            r'\.getScreenshotAs', 
+            r'\.save_screenshot', 
+            r'\.takeScreenshot',
+            r'captureScreenshot'
+        ],
+        'webdriver_management': [
+            r'WebDriverManager',
+            r'Driver\s*\(\s*executable_path',
+            r'ChromeDriverManager',
+            r'GeckoDriverManager',
+            r'driver = webdriver\.'
+        ],
+        'actions': [
+            r'Actions\(',
+            r'ActionChains',
+            r'\.perform\(',
+            r'\.moveToElement',
+            r'\.dragAndDrop'
+        ],
+        'javascript': [
+            r'JavascriptExecutor',
+            r'executeScript',
+            r'execute_script',
+            r'\.evaluateScript',
+            r'driver\.execute'
+        ]
+    }
+    
+    wait_strategy_patterns = {
+        'implicit': [
+            r'implicitly_wait', 
+            r'ImplicitlyWait', 
+            r'setImplicitWaitTimeout'
+        ],
+        'explicit': [
+            r'WebDriverWait', 
+            r'wait\.until', 
+            r'ExpectedConditions'
+        ],
+        'fluent': [
+            r'FluentWait',
+            r'withTimeout',
+            r'pollingEvery'
+        ],
+        'custom': [
+            r'class\s+\w+Wait',
+            r'def\s+wait_for_',
+            r'function\s+waitFor'
+        ]
+    }
+    
+    # Check all code files
+    for file_path in code_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+                # Check for explicit waits
+                if not explicit_waits:
+                    for pattern in selenium_patterns['explicit_waits']:
+                        if re.search(pattern, content):
+                            explicit_waits = True
+                            break
+                
+                # Check for custom wait conditions
+                if not custom_wait_conditions:
+                    for pattern in selenium_patterns['custom_wait']:
+                        if re.search(pattern, content):
+                            custom_wait_conditions = True
+                            break
+                
+                # Check for screenshot capability
+                if not screenshot_capability:
+                    for pattern in selenium_patterns['screenshot']:
+                        if re.search(pattern, content):
+                            screenshot_capability = True
+                            break
+                
+                # Check for WebDriver management
+                if not webdriver_management:
+                    for pattern in selenium_patterns['webdriver_management']:
+                        if re.search(pattern, content):
+                            webdriver_management = True
+                            break
+                
+                # Check for Actions class usage
+                if not actions_class_usage:
+                    for pattern in selenium_patterns['actions']:
+                        if re.search(pattern, content):
+                            actions_class_usage = True
+                            break
+                
+                # Check for JavaScript executor
+                if not javascript_executor:
+                    for pattern in selenium_patterns['javascript']:
+                        if re.search(pattern, content):
+                            javascript_executor = True
+                            break
+                
+                # Determine wait strategy score
+                for wait_type, patterns in wait_strategy_patterns.items():
+                    for pattern in patterns:
+                        if re.search(pattern, content):
+                            wait_types_found.append(wait_type)
+                            break
+        
+        except Exception as e:
+            logger.error(f"Error analyzing Selenium implementation in {file_path}: {str(e)}")
+    
+    # Calculate wait strategy score - favor explicit and fluent waits over implicit
+    wait_types_found = set(wait_types_found)
+    if 'custom' in wait_types_found:
+        wait_strategy = 100  # Best practice
+    elif 'explicit' in wait_types_found and 'fluent' in wait_types_found:
+        wait_strategy = 90   # Very good
+    elif 'explicit' in wait_types_found:
+        wait_strategy = 80   # Good
+    elif 'fluent' in wait_types_found:
+        wait_strategy = 70   # Good
+    elif 'implicit' in wait_types_found:
+        wait_strategy = 30   # Not ideal
+    else:
+        wait_strategy = 0    # None found
+    
+    # Set results
+    results['selenium_implementation']['wait_strategy'] = wait_strategy
+    results['selenium_implementation']['explicit_waits'] = explicit_waits
+    results['selenium_implementation']['custom_wait_conditions'] = custom_wait_conditions
+    results['selenium_implementation']['screenshot_capability'] = screenshot_capability
+    results['selenium_implementation']['webdriver_management'] = webdriver_management
+    results['selenium_implementation']['actions_class_usage'] = actions_class_usage
+    results['selenium_implementation']['javascript_executor'] = javascript_executor
+
+def analyze_browser_execution(project_path, results):
+    """Analyze browser execution capabilities."""
+    code_files = []
+    for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
+        code_files.extend(list(project_path.glob(f'**/*{ext}')))
+    
+    config_files = []
+    for ext in ['.json', '.xml', '.properties', '.yml', '.yaml', '.ini', '.conf', '.toml']:
+        config_files.extend(list(project_path.glob(f'**/*{ext}')))
+    
+    # Default values
+    browser_compatibility = 0
+    grid_support = False
+    parallel_execution = False
+    retry_mechanism = False
+    
+    # Patterns for analysis
+    browser_patterns = {
+        'chrome': [r'ChromeDriver', r'Chrome\(', r'\.Chrome', r'"browserName"\s*:\s*"chrome"'],
+        'firefox': [r'GeckoDriver', r'Firefox\(', r'\.Firefox', r'"browserName"\s*:\s*"firefox"'],
+        'edge': [r'EdgeDriver', r'Edge\(', r'\.Edge', r'"browserName"\s*:\s*"edge"', r'"browserName"\s*:\s*"msedge"'],
+        'safari': [r'SafariDriver', r'Safari\(', r'\.Safari', r'"browserName"\s*:\s*"safari"'],
+        'ie': [r'InternetExplorerDriver', r'Ie\(', r'\.Ie', r'"browserName"\s*:\s*"internet explorer"']
+    }
+    
+    grid_patterns = [
+        r'RemoteWebDriver',
+        r'grid\.Remote',
+        r'hub\.Remote',
+        r'DesiredCapabilities',
+        r'seleniumGrid',
+        r'"selenium-hub"',
+        r'setRemoteURL',
+        r'grid://localhost',
+        r'http://localhost:4444'
+    ]
+    
+    parallel_patterns = [
+        r'parallel',
+        r'Parallel',
+        r'Thread',
+        r'thread',
+        r'threadCount',
+        r'MultiThread',
+        r'suiteXmlFiles',
+        r'testng.*?parallel',
+        r'--threads',
+        r'-n\s+\d+'
+    ]
+    
+    retry_patterns = [
+        r'retry',
+        r'Retry',
+        r'RetryAnalyzer',
+        r'IRetryAnalyzer',
+        r'maxRetryCount',
+        r'Flaky',
+        r'@Test\s*\(.*?retryAnalyzer',
+        r'@Retryable'
+    ]
+    
+    # Count unique browsers supported
+    supported_browsers = set()
+    
+    # Check code files
+    for file_path in code_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+                # Check for browser compatibility
+                for browser, patterns in browser_patterns.items():
+                    for pattern in patterns:
+                        if re.search(pattern, content):
+                            supported_browsers.add(browser)
+                            break
+                
+                # Check for grid support
+                if not grid_support:
+                    for pattern in grid_patterns:
+                        if re.search(pattern, content):
+                            grid_support = True
+                            break
+                
+                # Check for parallel execution
+                if not parallel_execution:
+                    for pattern in parallel_patterns:
+                        if re.search(pattern, content):
+                            parallel_execution = True
+                            break
+                
+                # Check for retry mechanism
+                if not retry_mechanism:
+                    for pattern in retry_patterns:
+                        if re.search(pattern, content):
+                            retry_mechanism = True
+                            break
+        except Exception as e:
+            logger.error(f"Error analyzing browser execution in {file_path}: {str(e)}")
+    
+    # Also check config files
+    for file_path in config_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+                # Check for browser compatibility in config
+                for browser, patterns in browser_patterns.items():
+                    for pattern in patterns:
+                        if re.search(pattern, content):
+                            supported_browsers.add(browser)
+                            break
+                
+                # Check for grid support
+                if not grid_support:
+                    for pattern in grid_patterns:
+                        if re.search(pattern, content):
+                            grid_support = True
+                            break
+                
+                # Check for parallel execution
+                if not parallel_execution:
+                    for pattern in parallel_patterns:
+                        if re.search(pattern, content):
+                            parallel_execution = True
+                            break
+                
+                # Check for retry mechanism
+                if not retry_mechanism:
+                    for pattern in retry_patterns:
+                        if re.search(pattern, content):
+                            retry_mechanism = True
+                            break
+        except Exception as e:
+            logger.error(f"Error analyzing config file {file_path}: {str(e)}")
+    
+    # Calculate browser compatibility score based on number of browsers supported
+    browser_compatibility = min(100, len(supported_browsers) * 25)  # 25 points per browser type, max 100
+    
+    # Set results
+    results['browser_execution']['browser_compatibility'] = browser_compatibility
+    results['browser_execution']['grid_support'] = grid_support
+    results['browser_execution']['parallel_execution'] = parallel_execution
+    results['browser_execution']['retry_mechanism'] = retry_mechanism
+
+def analyze_page_objects(project_path, results):
+    """Analyze page object implementation."""
+    code_files = []
+    for ext in ['.py', '.java', '.cs', '.js', '.ts', '.rb']:
+        code_files.extend(list(project_path.glob(f'**/*{ext}')))
+    
+    # Default values
+    has_page_objects = False
+    total_page_objects = 0
+    base_page_pattern = False
+    proper_encapsulation = False
+    
+    # Patterns for analysis
+    page_object_patterns = [
+        r'class\s+\w*Page', 
+        r'class\s+\w*Screen',
+        r'class\s+\w*PageObject',
+        r'extends\s+\w*Page',
+        r'PageFactory\.initElements'
+    ]
+    
+    base_page_patterns = [
+        r'class\s+BasePage',
+        r'class\s+AbstractPage',
+        r'class\s+Page\s*\{',
+        r'abstract\s+class\s+\w*Page',
+        r'extends\s+BasePage',
+        r'super\s*\(',
+        r'super\.\w+'
+    ]
+    
+    encapsulation_patterns = [
+        r'private\s+[A-Za-z]',
+        r'protected\s+[A-Za-z]',
+        r'_[a-z]+\s+=',  # Python convention for private
+        r'getter',
+        r'setter',
+        r'@property',
+        r'get\w+\s*\(',
+        r'set\w+\s*\('
+    ]
+    
+    for file_path in code_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+                # Check for page objects
+                for pattern in page_object_patterns:
+                    page_matches = re.findall(pattern, content)
+                    if page_matches:
+                        has_page_objects = True
+                        total_page_objects += len(page_matches)
+                
+                # Check for base page pattern
+                if not base_page_pattern:
+                    for pattern in base_page_patterns:
+                        if re.search(pattern, content):
+                            base_page_pattern = True
+                            break
+                
+                # Check for proper encapsulation
+                if not proper_encapsulation:
+                    encapsulation_count = 0
+                    for pattern in encapsulation_patterns:
+                        matches = re.findall(pattern, content)
+                        encapsulation_count += len(matches)
+                    
+                    # If we find significant encapsulation patterns
+                    if encapsulation_count > 5:
+                        proper_encapsulation = True
+        
+        except Exception as e:
+            logger.error(f"Error analyzing page objects in {file_path}: {str(e)}")
+    
+    # Set results
+    results['page_objects']['has_page_objects'] = has_page_objects
+    results['page_objects']['total_page_objects'] = total_page_objects
+    results['page_objects']['base_page_pattern'] = base_page_pattern
+    results['page_objects']['proper_encapsulation'] = proper_encapsulation
+
+def calculate_framework_health(results):
+    """Calculate framework health overview metrics."""
+    # Calculate Selenium score
+    selenium_factors = [
+        results['selenium_implementation']['wait_strategy'] / 100,
+        1 if results['selenium_implementation']['explicit_waits'] else 0,
+        1 if results['selenium_implementation']['custom_wait_conditions'] else 0,
+        1 if results['selenium_implementation']['screenshot_capability'] else 0,
+        1 if results['selenium_implementation']['webdriver_management'] else 0,
+        1 if results['selenium_implementation']['actions_class_usage'] else 0,
+        1 if results['selenium_implementation']['javascript_executor'] else 0
+    ]
+    selenium_score = sum(selenium_factors) / len(selenium_factors) * 100
+    
+    # Calculate BDD score
+    bdd_factors = [
+        results['feature_files']['quality_score'] / 100,
+        results['step_definitions']['quality_score'] / 100,
+        results['bdd_implementation']['scenario_quality'] / 100,
+        1 if results['bdd_implementation']['background_usage'] else 0
+    ]
+    
+    # If no feature files or step definitions, set to 0
+    if results['feature_files']['count'] == 0 or results['step_definitions']['count'] == 0:
+        bdd_score = 0
+    else:
+        bdd_score = sum(bdd_factors) / len(bdd_factors) * 100
+    
+    # Calculate Code Quality score
+    code_quality_factors = [
+        results['code_quality']['naming_conventions'] / 100,
+        1 - (min(results['code_quality']['unused_imports'], 10) / 10),
+        1 - (min(results['code_quality']['commented_code'], 10) / 10),
+        1 - (min(results['code_quality']['system_out_usage'], 20) / 20),
+        1 - (min(results['code_quality']['unused_variables'], 10) / 10)
+    ]
+    code_quality_score = sum(code_quality_factors) / len(code_quality_factors) * 100
+    
+    # Calculate Structure score
+    structure_factors = [
+        results['framework_structure']['score'] / 100,
+        results['framework_architecture']['method_quality'] / 100,
+        1 if results['framework_architecture']['base_class_implementation'] else 0,
+        1 if results['framework_architecture']['data_driven_approach'] else 0,
+        1 if results['framework_architecture']['framework_scalability'] else 0,
+        1 if results['page_objects']['has_page_objects'] else 0,
+        1 if results['page_objects']['base_page_pattern'] else 0
+    ]
+    structure_score = sum(structure_factors) / len(structure_factors) * 100
+    
+    # Calculate Code Health score (overall framework health)
+    code_health_factors = [
+        selenium_score / 100,
+        bdd_score / 100,
+        code_quality_score / 100,
+        structure_score / 100
+    ]
+    code_health_score = sum(code_health_factors) / len(code_health_factors) * 100
+    
+    # Set results
+    results['framework_health']['selenium'] = round(selenium_score)
+    results['framework_health']['bdd'] = round(bdd_score)
+    results['framework_health']['code_quality'] = round(code_quality_score)
+    results['framework_health']['structure'] = round(structure_score)
+    results['framework_health']['code_health'] = round(code_health_score)
+
 def calculate_overall_score(results):
     """Calculate the overall score based on all metrics."""
+    # Traditional calculation
     feature_weight = 0.3
     step_weight = 0.3
     coverage_weight = 0.25
     structure_weight = 0.15
     
-    overall_score = (
+    traditional_score = (
         results['feature_files']['quality_score'] * feature_weight +
         results['step_definitions']['quality_score'] * step_weight +
         results['test_coverage']['score'] * coverage_weight +
         results['framework_structure']['score'] * structure_weight
     )
+    
+    # New calculation based on framework health
+    framework_health_score = results['framework_health']['code_health']
+    
+    # Combine both scores with more weight on the newer, more comprehensive health score
+    overall_score = (traditional_score * 0.4) + (framework_health_score * 0.6)
     
     results['overall_score'] = round(overall_score)

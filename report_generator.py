@@ -25,6 +25,35 @@ def generate_scoring_guide(results, project_path):
     """
     logger.debug("Generating scoring guide PDF")
     
+    # Check if results is None
+    if results is None:
+        # Create a sample empty results structure
+        results = {
+            'overall_score': 0,
+            'feature_files': {
+                'count': 0,
+                'quality_score': 0,
+                'issues': ['No analysis results available'],
+                'metrics': {}
+            },
+            'step_definitions': {
+                'count': 0,
+                'quality_score': 0,
+                'issues': ['No analysis results available'],
+                'metrics': {}
+            },
+            'test_coverage': {
+                'score': 0,
+                'issues': ['No analysis results available']
+            },
+            'framework_structure': {
+                'score': 0,
+                'issues': ['No analysis results available'],
+                'metrics': {'found_directories': 0, 'expected_directories': []}
+            },
+            'recommendations': ['Run a project analysis to get personalized recommendations']
+        }
+    
     # Create a temporary file for the PDF
     temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
     pdf_path = temp_file.name

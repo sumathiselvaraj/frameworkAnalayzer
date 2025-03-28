@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framework Health Overview - BDD Framework Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .health-overview {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .health-overview-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .critical-issues {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--error-color);
+            background-color: rgba(231, 76, 60, 0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+        
+        .critical-issues svg {
+            margin-right: 8px;
+        }
+        
+        .health-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .health-card {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .health-card.selenium {
+            background-color: #f1f1ff;
+        }
+        
+        .health-card.bdd {
+            background-color: #e6f9f1;
+        }
+        
+        .health-card.code-quality {
+            background-color: #fff8e6;
+        }
+        
+        .health-card.structure {
+            background-color: #f1ebff;
+        }
+        
+        .health-card.code-health {
+            background-color: #e9f7ff;
+        }
+        
+        .health-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+            color: var(--text-color);
+        }
+        
+        .health-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .health-card-value.low {
+            color: var(--error-color);
+        }
+        
+        .health-card-value.medium {
+            color: orange;
+        }
+        
+        .health-card-value.high {
+            color: var(--success-color);
+        }
+        
+        .trend-indicator {
+            position: absolute;
+            bottom: 1rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        
+        .trend-up {
+            color: var(--success-color);
+        }
+        
+        .trend-down {
+            color: var(--error-color);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .detail-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        
+        .detail-metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .detail-metric:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-value.success {
+            color: var(--success-color);
+        }
+        
+        .detail-value.error {
+            color: var(--error-color);
+        }
+        
+        .detail-value.warning {
+            color: orange;
+        }
+        
+        .detail-value .icon {
+            margin-left: 8px;
+        }
+        
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            font-size: 12px;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        @media (max-width: 1200px) {
+            .health-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .detail-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .health-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 7L12 12M12 12L7 17M12 12L7 7M12 12L17 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                BDD Framework Analyzer
+            </h1>
+            <p>Framework Health Overview</p>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="health-overview">
+                <h2 class="health-overview-title">
+                    Framework Health Overview
+                    <span class="critical-issues">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Critical Issues
+                    </span>
+                </h2>
+                
+                <div class="health-cards">
+                    <div class="health-card selenium">
+                        <h3 class="health-card-title">Selenium</h3>
+                        <div class="health-card-value {{ 'low' if results.framework_health.selenium < 40 else ('medium' if results.framework_health.selenium < 70 else 'high') }}">
+                            {{ results.framework_health.selenium }}%
+                        </div>
+                        <div class="trend-indicator {{ 'trend-up' if results.framework_health.selenium > 50 else 'trend-down' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {% if results.framework_health.selenium > 50 %}
+                                <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% else %}
+                                <path d="M12 5V19M12 19L19 12M12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="health-card bdd">
+                        <h3 class="health-card-title">BDD</h3>
+                        <div class="health-card-value {{ 'low' if results.framework_health.bdd < 40 else ('medium' if results.framework_health.bdd < 70 else 'high') }}">
+                            {{ results.framework_health.bdd }}%
+                        </div>
+                        <div class="trend-indicator {{ 'trend-up' if results.framework_health.bdd > 50 else 'trend-down' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {% if results.framework_health.bdd > 50 %}
+                                <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% else %}
+                                <path d="M12 5V19M12 19L19 12M12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="health-card code-quality">
+                        <h3 class="health-card-title">Code Quality</h3>
+                        <div class="health-card-value {{ 'low' if results.framework_health.code_quality < 40 else ('medium' if results.framework_health.code_quality < 70 else 'high') }}">
+                            {{ results.framework_health.code_quality }}%
+                        </div>
+                        <div class="trend-indicator {{ 'trend-up' if results.framework_health.code_quality > 50 else 'trend-down' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {% if results.framework_health.code_quality > 50 %}
+                                <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% else %}
+                                <path d="M12 5V19M12 19L19 12M12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="health-card structure">
+                        <h3 class="health-card-title">Structure</h3>
+                        <div class="health-card-value {{ 'low' if results.framework_health.structure < 40 else ('medium' if results.framework_health.structure < 70 else 'high') }}">
+                            {{ results.framework_health.structure }}%
+                        </div>
+                        <div class="trend-indicator {{ 'trend-up' if results.framework_health.structure > 50 else 'trend-down' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {% if results.framework_health.structure > 50 %}
+                                <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% else %}
+                                <path d="M12 5V19M12 19L19 12M12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="health-card code-health">
+                        <h3 class="health-card-title">Code Health</h3>
+                        <div class="health-card-value {{ 'low' if results.framework_health.code_health < 40 else ('medium' if results.framework_health.code_health < 70 else 'high') }}">
+                            {{ results.framework_health.code_health }}%
+                        </div>
+                        <div class="trend-indicator {{ 'trend-up' if results.framework_health.code_health > 50 else 'trend-down' }}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {% if results.framework_health.code_health > 50 %}
+                                <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% else %}
+                                <path d="M12 5V19M12 19L19 12M12 19L5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                {% endif %}
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-grid">
+                <!-- BDD Implementation Panel -->
+                <div class="detail-card">
+                    <h3 class="detail-card-title">BDD Implementation</h3>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Background Usage:</div>
+                        <div class="detail-value {{ 'success' if results.bdd_implementation.background_usage else 'error' }}">
+                            {% if results.bdd_implementation.background_usage %}
+                            ✓ Implemented
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Scenario Quality:</div>
+                        <div class="detail-value {{ 'success' if results.bdd_implementation.scenario_quality >= 70 else ('warning' if results.bdd_implementation.scenario_quality >= 40 else 'error') }}">
+                            {{ results.bdd_implementation.scenario_quality }}%
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Total Scenarios:</div>
+                        <div class="detail-value">
+                            {{ results.bdd_implementation.total_scenarios }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Empty Steps:</div>
+                        <div class="detail-value {{ 'success' if results.bdd_implementation.empty_steps == 0 else 'error' }}">
+                            {{ results.bdd_implementation.empty_steps }} <span class="info-icon" title="Steps without implementation or placeholder steps">i</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Framework Architecture Panel -->
+                <div class="detail-card">
+                    <h3 class="detail-card-title">Framework Architecture</h3>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Base Class Implementation:</div>
+                        <div class="detail-value {{ 'success' if results.framework_architecture.base_class_implementation else 'error' }}">
+                            {% if results.framework_architecture.base_class_implementation %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Data Driven Approach:</div>
+                        <div class="detail-value {{ 'success' if results.framework_architecture.data_driven_approach else 'error' }}">
+                            {% if results.framework_architecture.data_driven_approach %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Framework Scalability:</div>
+                        <div class="detail-value {{ 'success' if results.framework_architecture.framework_scalability else 'error' }}">
+                            {% if results.framework_architecture.framework_scalability %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Method Quality:</div>
+                        <div class="detail-value {{ 'success' if results.framework_architecture.method_quality >= 70 else ('warning' if results.framework_architecture.method_quality >= 40 else 'error') }}">
+                            {{ results.framework_architecture.method_quality }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Code Quality Panel -->
+                <div class="detail-card">
+                    <h3 class="detail-card-title">Code Quality</h3>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Naming Conventions:</div>
+                        <div class="detail-value {{ 'success' if results.code_quality.naming_conventions >= 70 else ('warning' if results.code_quality.naming_conventions >= 40 else 'error') }}">
+                            {{ results.code_quality.naming_conventions }}%
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Unused Imports:</div>
+                        <div class="detail-value {{ 'success' if results.code_quality.unused_imports < 5 else ('warning' if results.code_quality.unused_imports < 10 else 'error') }}">
+                            {{ results.code_quality.unused_imports }} <span class="info-icon" title="Number of unused imports found in the codebase">i</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Commented Code:</div>
+                        <div class="detail-value {{ 'success' if results.code_quality.commented_code < 5 else ('warning' if results.code_quality.commented_code < 15 else 'error') }}">
+                            {{ results.code_quality.commented_code }} <span class="info-icon" title="Lines of commented-out code found">i</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">System.out Usage:</div>
+                        <div class="detail-value {{ 'success' if results.code_quality.system_out_usage < 5 else ('warning' if results.code_quality.system_out_usage < 20 else 'error') }}">
+                            {{ results.code_quality.system_out_usage }} <span class="info-icon" title="System.out print statements found instead of proper logging">i</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Unused Variables:</div>
+                        <div class="detail-value {{ 'success' if results.code_quality.unused_variables < 5 else ('warning' if results.code_quality.unused_variables < 15 else 'error') }}">
+                            {{ results.code_quality.unused_variables }} <span class="info-icon" title="Declared but unused variables found">i</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-grid">
+                <!-- Selenium Implementation Panel -->
+                <div class="detail-card">
+                    <h3 class="detail-card-title">Selenium Implementation</h3>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Wait Strategy:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.wait_strategy >= 70 else ('warning' if results.selenium_implementation.wait_strategy >= 30 else 'error') }}">
+                            {{ results.selenium_implementation.wait_strategy }}%
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Explicit Waits:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.explicit_waits else 'error' }}">
+                            {% if results.selenium_implementation.explicit_waits %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Custom Wait Conditions:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.custom_wait_conditions else 'error' }}">
+                            {% if results.selenium_implementation.custom_wait_conditions %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Screenshot Capability:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.screenshot_capability else 'error' }}">
+                            {% if results.selenium_implementation.screenshot_capability %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">WebDriver Management:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.webdriver_management else 'error' }}">
+                            {% if results.selenium_implementation.webdriver_management %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Actions Class Usage:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.actions_class_usage else 'error' }}">
+                            {% if results.selenium_implementation.actions_class_usage %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">JavaScript Executor:</div>
+                        <div class="detail-value {{ 'success' if results.selenium_implementation.javascript_executor else 'error' }}">
+                            {% if results.selenium_implementation.javascript_executor %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Browser & Execution Panel -->
+                <div class="detail-card">
+                    <h3 class="detail-card-title">Browser & Execution</h3>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Browser Compatibility:</div>
+                        <div class="detail-value {{ 'success' if results.browser_execution.browser_compatibility >= 75 else ('warning' if results.browser_execution.browser_compatibility >= 25 else 'error') }}">
+                            {{ results.browser_execution.browser_compatibility }}% <span class="info-icon" title="Number of different browsers supported">i</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Grid Support:</div>
+                        <div class="detail-value {{ 'success' if results.browser_execution.grid_support else 'error' }}">
+                            {% if results.browser_execution.grid_support %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Parallel Execution:</div>
+                        <div class="detail-value {{ 'success' if results.browser_execution.parallel_execution else 'error' }}">
+                            {% if results.browser_execution.parallel_execution %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Retry Mechanism:</div>
+                        <div class="detail-value {{ 'success' if results.browser_execution.retry_mechanism else 'error' }}">
+                            {% if results.browser_execution.retry_mechanism %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Page Objects Panel -->
+                <div class="detail-card">
+                    <h3 class="detail-card-title">Page Objects</h3>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Has Page Objects:</div>
+                        <div class="detail-value {{ 'success' if results.page_objects.has_page_objects else 'error' }}">
+                            {% if results.page_objects.has_page_objects %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Total Page Objects:</div>
+                        <div class="detail-value">
+                            {{ results.page_objects.total_page_objects }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Base Page Pattern:</div>
+                        <div class="detail-value {{ 'success' if results.page_objects.base_page_pattern else 'error' }}">
+                            {% if results.page_objects.base_page_pattern %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-metric">
+                        <div class="detail-label">Proper Encapsulation:</div>
+                        <div class="detail-value {{ 'success' if results.page_objects.proper_encapsulation else 'error' }}">
+                            {% if results.page_objects.proper_encapsulation %}
+                            ✓ Found
+                            {% else %}
+                            ✗ Missing
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Back to Analyzer
+                </a>
+                
+                <a href="{{ url_for('download_guide') }}" class="btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 17L12 3M12 17L8 13M12 17L16 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L2 18C2 19.6569 3.34315 21 5 21L19 21C20.6569 21 22 19.6569 22 18L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Download Scoring Guide
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Show tooltips for info icons
+        document.querySelectorAll('.info-icon').forEach(icon => {
+            const title = icon.getAttribute('title');
+            if (title) {
+                icon.addEventListener('mouseenter', function(e) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = title;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = this.getBoundingClientRect();
+                    tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+                    tooltip.style.top = rect.bottom + 10 + 'px';
+                });
+                
+                icon.addEventListener('mouseleave', function() {
+                    const tooltip = document.querySelector('.tooltip');
+                    if (tooltip) tooltip.remove();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
