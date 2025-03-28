@@ -23,6 +23,8 @@ def generate_scoring_guide(results, project_path):
     Returns:
         str: Path to the generated PDF file
     """
+    # Extract the project name from the path (final part of the path)
+    project_name = os.path.basename(project_path)
     logger.debug("Generating scoring guide PDF")
     
     # Check if results is None
@@ -107,7 +109,7 @@ def generate_scoring_guide(results, project_path):
     content.append(Spacer(1, 0.25 * inch))
     
     # Project info
-    content.append(Paragraph(f"Project: {project_path}", normal_style))
+    content.append(Paragraph(f"Project: {project_name}", normal_style))
     content.append(Paragraph(f"Overall Score: {results['overall_score']}/100", heading_style))
     content.append(Spacer(1, 0.2 * inch))
     
