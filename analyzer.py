@@ -291,10 +291,14 @@ def analyze_step_definitions(project_path, results):
     # Count all step definition files including nested ones
     step_files_count = 0
     for ext in ['.py', '.js', '.ts', '.rb', '.java', '.cs']:
-        java_steps = list(project_path.glob(f'**/*Steps{ext}'))
-        feature_steps = list(project_path.glob(f'**/*Feature{ext}'))
-        definition_steps = list(project_path.glob(f'**/*StepDefinition{ext}'))
-        step_files_count += len(java_steps) + len(feature_steps) + len(definition_steps)
+        # Look for files ending with Steps.java, Step.java, or containing steps/step in name
+        java_steps = list(project_path.glob(f'**/*[Ss]teps{ext}'))
+        page_steps = list(project_path.glob(f'**/*Page[Ss]teps{ext}'))
+        validation_steps = list(project_path.glob(f'**/*[Vv]alidation{ext}'))
+        batch_steps = list(project_path.glob(f'**/*[Bb]atch*{ext}'))
+        
+        step_files_count += (len(java_steps) + len(page_steps) + 
+                           len(validation_steps) + len(batch_steps))
 
     results['step_definitions']['count'] = step_files_count
 
