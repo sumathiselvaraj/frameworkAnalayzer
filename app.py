@@ -33,11 +33,15 @@ def analyze():
         logger.debug(f"Analyzing project at path: {project_path}")
         results = analyze_bdd_framework(project_path)
         
+        # Extract the final part of the path to use as project name
+        project_name = os.path.basename(project_path)
+        
         # Store results in session for later use
         session['analysis_results'] = results
         session['project_path'] = project_path
+        session['project_name'] = project_name
         
-        return render_template('results.html', results=results, project_path=project_path)
+        return render_template('results.html', results=results, project_path=project_path, project_name=project_name)
     
     except Exception as e:
         logger.error(f"Error analyzing project: {str(e)}")
@@ -52,12 +56,13 @@ def health_overview():
     # Get results from session if available
     results = session.get('analysis_results')
     project_path = session.get('project_path', 'Unknown Project')
+    project_name = session.get('project_name', os.path.basename(project_path))
     
     if not results:
         flash('Please analyze a project first', 'error')
         return redirect(url_for('index'))
     
-    return render_template('health_overview.html', results=results, project_path=project_path)
+    return render_template('health_overview.html', results=results, project_path=project_path, project_name=project_name)
 
 @app.route('/download-guide')
 def download_guide():
@@ -66,6 +71,7 @@ def download_guide():
         # Get results from session if available
         results = session.get('analysis_results')
         project_path = session.get('project_path', 'Unknown Project')
+        project_name = session.get('project_name', os.path.basename(project_path))
         
         # Generate PDF guide
         pdf_path = generate_scoring_guide(results, project_path)
@@ -73,7 +79,7 @@ def download_guide():
         return send_file(
             pdf_path,
             as_attachment=True,
-            download_name='bdd_scoring_guide.pdf'
+            download_name=f'bdd_scoring_guide_{project_name}.pdf'
         )
     
     except Exception as e:

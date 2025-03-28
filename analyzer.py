@@ -168,6 +168,12 @@ def analyze_feature_files(project_path, results):
     scenarios_with_examples = 0
     scenarios_with_tags = 0
     
+    # Track the reasons for score reduction
+    missing_feature_descriptions = 0
+    missing_backgrounds = 0
+    missing_tags = 0
+    missing_examples = 0
+    
     for file_path in feature_files:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -187,9 +193,11 @@ def analyze_feature_files(project_path, results):
                 
                 # Check for best practices
                 if not re.search(r'Feature:', content):
+                    missing_feature_descriptions += 1
                     quality_issues.append(f"Missing Feature description in {file_path.name}")
                 
                 if not re.search(r'Background:', content) and len(scenario_matches) > 1:
+                    missing_backgrounds += 1
                     quality_issues.append(f"Consider using Background for common steps in {file_path.name}")
         
         except Exception as e:
@@ -199,6 +207,16 @@ def analyze_feature_files(project_path, results):
     tag_ratio = scenarios_with_tags / max(scenarios_count, 1)
     examples_ratio = scenarios_with_examples / max(scenarios_count, 1)
     
+    # Track missing scenario tags and examples for scoring explanation
+    if tag_ratio < 1.0:
+        missing_tags_count = scenarios_count - scenarios_with_tags
+        missing_tags = True
+        quality_issues.append(f"Missing tags on {missing_tags_count} scenarios (Adding tags improves readability and filtering)")
+    
+    if examples_ratio < 0.2:  # If less than 20% of scenarios use examples
+        missing_examples = True
+        quality_issues.append("Limited use of Scenario Outlines with Examples tables (Using examples enables data-driven testing)")
+    
     base_score = 70
     tag_score = min(15, tag_ratio * 15)
     examples_score = min(15, examples_ratio * 15)
@@ -206,12 +224,36 @@ def analyze_feature_files(project_path, results):
     quality_score = base_score + tag_score + examples_score
     quality_score = max(0, quality_score - (len(quality_issues) * 5))  # Reduce score for issues
     
+    # Calculate missing points and add explanation
+    missing_points = 100 - round(min(100, quality_score))
+    missing_reasons = []
+    
+    if missing_tags:
+        missing_reasons.append("Missing scenario tags (-10 points): Add descriptive tags to all scenarios")
+    
+    if missing_examples:
+        missing_reasons.append("Limited use of Examples tables (-10 points): Convert more scenarios to Scenario Outlines")
+    
+    if missing_backgrounds > 0:
+        missing_reasons.append(f"Missing Background sections (-{missing_backgrounds * 5} points): Use Background for common steps")
+    
+    if missing_feature_descriptions > 0:
+        missing_reasons.append(f"Missing Feature descriptions (-{missing_feature_descriptions * 5} points): Add clear Feature descriptions")
+    
+    # Add explanations to issues
+    if missing_points > 0:
+        quality_issues.append(f"Missing {missing_points}% in Feature Files score due to:")
+        for reason in missing_reasons:
+            quality_issues.append(f"• {reason}")
+    
     results['feature_files']['quality_score'] = round(min(100, quality_score))
     results['feature_files']['issues'] = quality_issues
     results['feature_files']['metrics'] = {
         'scenarios_count': scenarios_count,
         'scenarios_with_examples': scenarios_with_examples,
-        'scenarios_with_tags': scenarios_with_tags
+        'scenarios_with_tags': scenarios_with_tags,
+        'missing_points': missing_points,
+        'missing_reasons': missing_reasons
     }
 
 def analyze_step_definitions(project_path, results):
