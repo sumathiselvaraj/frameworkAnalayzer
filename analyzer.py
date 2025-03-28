@@ -300,9 +300,12 @@ def analyze_step_definitions(project_path, results):
     java_step_count = len(java_step_files)
     results['step_definitions']['java_steps_count'] = java_step_count
     results['step_definitions']['count'] = java_step_count  # Set total count
+
+    # Add remaining step patterns
+    step_patterns.update({
         '.rb': ['**/step_definitions/**/*.rb', '**/steps/**/*.rb'],
         '.cs': ['**/StepDefinitions/**/*.cs', '**/Steps/**/*.cs']
-    }
+    })
 
     # Find all step definition files
     for ext, patterns in step_patterns.items():
