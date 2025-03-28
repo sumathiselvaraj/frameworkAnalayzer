@@ -198,16 +198,22 @@ def generate_scoring_guide(results, project_path):
     content.append(Paragraph("Test Coverage Analysis", heading_style))
 
     # Add test coverage metrics if available
-    if 'test_coverage' in results and 'metrics' in results['test_coverage']:
-        metrics = results['test_coverage']['metrics']
-        if metrics.get('steps_to_features_ratio'):
-            content.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", normal_style))
+    if 'test_coverage' in results:
+        if results['test_coverage'].get('issues'):
+            content.append(Paragraph("Issues:", subheading_style))
+            for issue in results['test_coverage']['issues']:
+                content.append(Paragraph(f"• {issue}", normal_style))
+        
+        metrics = results['test_coverage'].get('metrics', {})
+        if metrics:
+            if 'steps_to_features_ratio' in metrics:
+                content.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", normal_style))
 
-        if metrics.get('missing_points', 0) > 0:
-            content.append(Paragraph("Coverage Loss Details:", subheading_style))
-            content.append(Paragraph(f"Missing {metrics['missing_points']}% in Test Coverage due to:", normal_style))
-            for reason in metrics.get('missing_reasons', []):
-                content.append(Paragraph(f"• {reason}", normal_style))
+            if metrics.get('missing_points', 0) > 0:
+                content.append(Paragraph("Coverage Loss Details:", subheading_style))
+                content.append(Paragraph(f"Missing {metrics['missing_points']}% in Test Coverage due to:", normal_style))
+                for reason in metrics.get('missing_reasons', []):
+                    content.append(Paragraph(f"• {reason}", normal_style))
     else:
         content.append(Paragraph("No detailed metrics available for test coverage", normal_style))
 
