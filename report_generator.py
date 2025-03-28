@@ -163,11 +163,11 @@ def generate_scoring_guide(results, project_path):
     content.append(Paragraph("Feature Files Analysis", heading_style))
     content.append(Paragraph(f"Found {results['feature_files']['count']} feature files", normal_style))
 
-    if results['feature_files']['metrics'].get('scenarios_count'):
+    if results.get('feature_files', {}).get('metrics', {}).get('scenarios_count'):
         metrics = results['feature_files']['metrics']
         content.append(Paragraph(f"• Total scenarios: {metrics['scenarios_count']}", normal_style))
-        content.append(Paragraph(f"• Scenarios with examples: {metrics['scenarios_with_examples']}", normal_style))
-        content.append(Paragraph(f"• Scenarios with tags: {metrics['scenarios_with_tags']}", normal_style))
+        content.append(Paragraph(f"• Scenarios with examples: {metrics.get('scenarios_with_examples', 0)}", normal_style))
+        content.append(Paragraph(f"• Scenarios with tags: {metrics.get('scenarios_with_tags', 0)}", normal_style))
 
     if results['feature_files']['issues']:
         content.append(Paragraph("Issues:", subheading_style))
@@ -180,11 +180,11 @@ def generate_scoring_guide(results, project_path):
     content.append(Paragraph("Step Definitions Analysis", heading_style))
     content.append(Paragraph(f"Found {results['step_definitions']['count']} step definition files", normal_style))
 
-    if results['step_definitions']['metrics'].get('total_steps'):
+    if results.get('step_definitions', {}).get('metrics', {}).get('total_steps'):
         metrics = results['step_definitions']['metrics']
         content.append(Paragraph(f"• Total step definitions: {metrics['total_steps']}", normal_style))
-        content.append(Paragraph(f"• Parameterized steps: {metrics['parameterized_steps']}", normal_style))
-        param_ratio = metrics['parameterized_steps'] / max(metrics['total_steps'], 1) * 100
+        content.append(Paragraph(f"• Parameterized steps: {metrics.get('parameterized_steps', 0)}", normal_style))
+        param_ratio = metrics.get('parameterized_steps', 0) / max(metrics.get('total_steps', 1), 1) * 100
         content.append(Paragraph(f"• Parameterization ratio: {param_ratio:.1f}%", normal_style))
 
     if results['step_definitions']['issues']:
