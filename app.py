@@ -42,8 +42,25 @@ def analyze():
         elif '/' in project_path:
             project_name = project_path.split('/')[-1]
 
-        # Store results in session for later use
-        session['analysis_results'] = results
+        # Convert results to be JSON serializable before storing in session
+        serializable_results = {
+            'overall_score': results['overall_score'],
+            'feature_files': {
+                'count': results['feature_files']['count'],
+                'quality_score': results['feature_files']['quality_score'],
+                'issues': [str(issue) for issue in results['feature_files']['issues']]
+            },
+            'step_definitions': {
+                'count': results['step_definitions']['count'],
+                'quality_score': results['step_definitions']['quality_score'],
+                'issues': [str(issue) for issue in results['step_definitions']['issues']]
+            },
+            'framework_structure': results['framework_structure'],
+            'test_coverage': results['test_coverage'],
+            'framework_health': results['framework_health']
+        }
+        
+        session['analysis_results'] = serializable_results
         session['project_path'] = project_path
         session['project_name'] = project_name
 
