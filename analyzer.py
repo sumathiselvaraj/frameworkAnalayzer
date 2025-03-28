@@ -139,6 +139,9 @@ def analyze_bdd_framework(project_path):
         # Calculate framework health overview
         calculate_framework_health(results)
 
+        # Analyze project enhancers
+        analyze_project_enhancers(results)
+
         # Generate recommendations
         generate_recommendations(results)
 
@@ -1416,6 +1419,45 @@ def calculate_framework_health(results):
     results['framework_health']['code_quality'] = round(code_quality_score)
     results['framework_health']['structure'] = round(structure_score)
     results['framework_health']['code_health'] = round(code_health_score)
+
+def analyze_project_enhancers(results):
+    """Analyze additional project enhancers and features."""
+    enhancers = {
+        'maven_structure': False,
+        'testng_config': False,
+        'page_factory': False,
+        'logging_implementation': False,
+        'data_driven_testing': False,
+        'custom_reporting': False
+    }
+    
+    # Check for Maven structure
+    if os.path.exists('pom.xml'):
+        enhancers['maven_structure'] = True
+        
+    # Check for TestNG configuration
+    if os.path.exists('testng.xml'):
+        enhancers['testng_config'] = True
+        
+    # Look for common patterns in source files
+    for root, _, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.java'):
+                try:
+                    with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if 'PageFactory.initElements' in content:
+                            enhancers['page_factory'] = True
+                        if 'Logger' in content or 'log4j' in content:
+                            enhancers['logging_implementation'] = True
+                        if '@DataProvider' in content or 'testdata' in content.lower():
+                            enhancers['data_driven_testing'] = True
+                        if 'ExtentReports' in content or 'TestNG' in content:
+                            enhancers['custom_reporting'] = True
+                except Exception as e:
+                    logger.error(f"Error reading file {file}: {str(e)}")
+
+    results['project_enhancers'] = enhancers
 
 def calculate_overall_score(results):
     """Calculate the overall score based on all metrics."""

@@ -221,21 +221,53 @@ def generate_scoring_guide(results, project_path):
         else:
             story.append(Paragraph("No specific recommendations at this time.", styles['Normal']))
 
-    # Team02 Enhancers Section (from original)
+    # Project Enhancers Section
     story.append(Spacer(1, 0.3 * inch))
-    story.append(Paragraph("Team02 Project Analysis", styles['Heading2']))
+    story.append(Paragraph("Project Analysis & Enhancers", styles['Heading2']))
 
-    # Add details about Team02 structure
+    # Project Structure
     story.append(Paragraph("Project Structure:", styles['Heading3']))
     story.append(Paragraph("• Maven-based Selenium test automation project", styles['Normal']))
     story.append(Paragraph("• TestNG configuration present", styles['Normal']))
     story.append(Paragraph("• Organized in standard Maven directory layout", styles['Normal']))
 
-    # Add findings about implementation
+    # Implementation Details
     story.append(Paragraph("Implementation Details:", styles['Heading3']))
     story.append(Paragraph("• Step definitions located in stepDefinitions folder", styles['Normal']))
     story.append(Paragraph("• Uses TestNG for test execution framework", styles['Normal']))
     story.append(Paragraph("• Selenium WebDriver implementation found", styles['Normal']))
+
+    # Project Enhancers
+    story.append(Paragraph("Framework Enhancers:", styles['Heading3']))
+    enhancers = results.get('project_enhancers', {})
+    
+    enhancer_status = [
+        ["Feature", "Status"],
+        ["Maven Structure", "✓ Implemented" if enhancers.get('maven_structure', False) else "✗ Not Found"],
+        ["TestNG Config", "✓ Implemented" if enhancers.get('testng_config', False) else "✗ Not Found"],
+        ["Page Factory", "✓ Implemented" if enhancers.get('page_factory', False) else "✗ Not Found"],
+        ["Logging", "✓ Implemented" if enhancers.get('logging_implementation', False) else "✗ Not Found"],
+        ["Data Driven Testing", "✓ Implemented" if enhancers.get('data_driven_testing', False) else "✗ Not Found"],
+        ["Custom Reporting", "✓ Implemented" if enhancers.get('custom_reporting', False) else "✗ Not Found"]
+    ]
+    
+    enhancer_table = Table(enhancer_status, colWidths=[3 * inch, 2 * inch])
+    enhancer_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10)
+    ]))
+    
+    story.append(enhancer_table)
+    story.append(Spacer(1, 0.2 * inch))
 
     # Build the PDF
     doc.build(story)
