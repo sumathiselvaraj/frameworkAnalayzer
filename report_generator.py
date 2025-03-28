@@ -141,11 +141,14 @@ def generate_scoring_guide(results, project_path):
     # Browser Execution Section
     story.append(Paragraph("Browser Execution Analysis", styles['Heading2']))
 
+    # Get browser execution data with defaults
+    browser_exec = results.get('browser_execution', {})
+    
     browser_metrics = [
-        ["Browser Compatibility", f"{results['browser_execution']['browser_compatibility']}%"],
-        ["Grid Support", "Implemented" if results['browser_execution']['grid_support'] else "Missing"],
-        ["Parallel Execution", "Implemented" if results['browser_execution']['parallel_execution'] else "Missing"],
-        ["Retry Mechanism", "Implemented" if results['browser_execution']['retry_mechanism'] else "Missing"]
+        ["Browser Compatibility", f"{browser_exec.get('browser_compatibility', 0)}%"],
+        ["Grid Support", "Implemented" if browser_exec.get('grid_support', False) else "Missing"],
+        ["Parallel Execution", "Implemented" if browser_exec.get('parallel_execution', False) else "Missing"],
+        ["Retry Mechanism", "Implemented" if browser_exec.get('retry_mechanism', False) else "Missing"]
     ]
 
     browser_table = Table(browser_metrics, colWidths=[3 * inch, 1 * inch])
