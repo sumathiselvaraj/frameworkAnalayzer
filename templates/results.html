@@ -77,7 +77,7 @@
                     <div class="score-value">{{ results.step_definitions.quality_score }}</div>
                     <div class="score-details">
                         <h3 class="score-title">Step Definitions</h3>
-                        <p class="score-description">We analyzed {{ results.step_definitions.count }} step definition files.</p>
+                        <p class="score-description">We analyzed {{ results.step_definitions.count }} step definition files{% if results.step_definitions.java_steps_count %}, including {{ results.step_definitions.java_steps_count }} Java step definition files{% endif %}.</p>
                         
                         {% if results.step_definitions.metrics %}
                         <ul class="metric-list">

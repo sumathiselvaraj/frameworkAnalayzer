@@ -281,6 +281,11 @@ def analyze_step_definitions(project_path, results):
     """Analyze step definition files in the project."""
     # Get global variable to check if using sample project
     global using_sample
+    
+    # Specific counter for Java step definition files
+    java_step_files = list(project_path.glob('**/stepdefs/**/*.java'))
+    java_step_count = len([f for f in java_step_files if not 'Hooks' in f.name])
+    results['step_definitions']['java_steps_count'] = java_step_count
 
     # Look for step definition files recursively
     step_files = []
