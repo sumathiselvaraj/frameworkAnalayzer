@@ -1462,21 +1462,9 @@ def analyze_project_enhancers(results, project_path):
             with open(pom_file, 'r', encoding='utf-8') as f:
                 pom_content = f.read().lower()
                 # Check for TestNG
-                # Check for TestNG configuration
+                # Check for TestNG configuration - only require testng.xml
                 testng_xml_exists = os.path.exists(os.path.join(project_path, 'testng.xml'))
-                
-                # Check runner package for AbstractTestNGCucumberTests extension
-                runner_files = list(Path(project_path).rglob('**/runner/*.java'))
-                has_testng_runner = False
-                
-                for runner_file in runner_files:
-                    with open(runner_file, 'r', encoding='utf-8') as rf:
-                        content = rf.read()
-                        if 'extends AbstractTestNGCucumberTests' in content:
-                            has_testng_runner = True
-                            break
-                
-                enhancers['testng_config'] = testng_xml_exists and has_testng_runner
+                enhancers['testng_config'] = testng_xml_exists
                 # Check for logging frameworks
                 if any(logger in pom_content for logger in ['log4j', 'slf4j', 'logback']):
                     enhancers['logging_implementation'] = True
