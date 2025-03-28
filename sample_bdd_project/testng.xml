@@ -4,6 +4,7 @@
 <suite name="BDD Test Suite" parallel="methods" thread-count="3" data-provider-thread-count="3">
     <listeners>
         <listener class-name="utils.RetryConfig"/>
+        <listener class-name="utils.RetryAnalyzer"/>
     </listeners>
     <test name="Cucumber Tests">
         <classes>
