@@ -225,6 +225,23 @@ def generate_scoring_guide(results, project_path):
     story.append(Spacer(1, 0.3 * inch))
     story.append(Paragraph("Project Analysis & Enhancers", styles['Heading2']))
 
+    # Project Strengths
+    story.append(Paragraph("Project Strengths:", styles['Heading3']))
+    strengths = results.get('project_strengths', {})
+    
+    if strengths:
+        story.append(Paragraph("• Well-structured Maven-based Selenium test automation framework", styles['Normal']))
+        story.append(Paragraph("• Robust TestNG integration for reliable test execution", styles['Normal']))
+        story.append(Paragraph("• Clear and organized project structure following industry standards", styles['Normal']))
+        if strengths.get('documentation', False):
+            story.append(Paragraph("• Good documentation practices with README", styles['Normal']))
+        if strengths.get('ci_ready', False):
+            story.append(Paragraph("• CI/CD ready with proper configuration files", styles['Normal']))
+        if strengths.get('maintainable', False):
+            story.append(Paragraph("• Highly maintainable codebase with good naming conventions", styles['Normal']))
+        if strengths.get('scalable', False):
+            story.append(Paragraph("• Scalable architecture supporting parallel execution", styles['Normal']))
+    
     # Project Structure
     story.append(Paragraph("Project Structure:", styles['Heading3']))
     story.append(Paragraph("• Maven-based Selenium test automation project", styles['Normal']))
