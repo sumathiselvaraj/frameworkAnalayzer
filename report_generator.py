@@ -198,8 +198,8 @@ def generate_scoring_guide(results, project_path):
     content.append(Paragraph("Test Coverage Analysis", heading_style))
 
     # Add test coverage metrics if available
-    metrics = results.get('test_coverage', {}).get('metrics', {})
-    if metrics:
+    if 'test_coverage' in results and 'metrics' in results['test_coverage']:
+        metrics = results['test_coverage']['metrics']
         if metrics.get('steps_to_features_ratio'):
             content.append(Paragraph(f"Step definitions to features ratio: {metrics['steps_to_features_ratio']}", normal_style))
 
@@ -292,13 +292,13 @@ def generate_scoring_guide(results, project_path):
     # Team02 Enhancers Section
     content.append(Spacer(1, 0.3 * inch))
     content.append(Paragraph("Team02 Project Analysis", heading_style))
-    
+
     # Add details about Team02 structure
     content.append(Paragraph("Project Structure:", subheading_style))
     content.append(Paragraph("• Maven-based Selenium test automation project", normal_style))
     content.append(Paragraph("• TestNG configuration present", normal_style))
     content.append(Paragraph("• Organized in standard Maven directory layout", normal_style))
-    
+
     # Add findings about implementation
     content.append(Paragraph("Implementation Details:", subheading_style))
     content.append(Paragraph("• Step definitions located in stepDefinitions folder", normal_style))
