@@ -188,6 +188,30 @@ def generate_scoring_guide(results, project_path):
     
     content.append(Spacer(1, 0.2 * inch))
     
+    # Selenium Implementation Section
+    content.append(Paragraph("Selenium Implementation", heading_style))
+    
+    # Add Selenium metrics
+    selenium_metrics = [
+        ("Wait Strategy", f"{results['selenium_implementation']['wait_strategy']}%"),
+        ("Explicit Waits", "✓ Found" if results['selenium_implementation']['explicit_waits'] else "✗ Missing"),
+        ("Custom Wait Conditions", "✓ Found" if results['selenium_implementation']['custom_wait_conditions'] else "✗ Missing"),
+        ("Screenshot Capability", "✓ Found" if results['selenium_implementation']['screenshot_capability'] else "✗ Missing"),
+        ("WebDriver Management", "✓ Found" if results['selenium_implementation']['webdriver_management'] else "✗ Missing"),
+        ("Actions Class Usage", "✓ Found" if results['selenium_implementation']['actions_class_usage'] else "✗ Missing"),
+        ("JavaScript Executor", "✓ Found" if results['selenium_implementation']['javascript_executor'] else "✗ Missing")
+    ]
+    
+    selenium_table = Table(selenium_metrics, colWidths=[3 * inch, 1 * inch])
+    selenium_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.purple),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+    ]))
+    
+    content.append(selenium_table)
+    content.append(Spacer(1, 0.2 * inch))
+
     # Framework Structure Section
     content.append(Paragraph("Framework Structure Analysis", heading_style))
     
