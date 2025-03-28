@@ -285,7 +285,7 @@ def analyze_step_definitions(project_path, results):
     # Look for step definition files recursively  
     step_files = []
     step_patterns = {
-        '.java': ['**/stepDefinitions/*.java', '**/stepdefinitions/*.java'],
+        '.java': ['**/stepDefinitions/**/*.java', '**/stepdefinitions/**/*.java', '**/step_definitions/**/*.java', '**/steps/**/*.java'],
         '.py': ['**/step_definitions/**/*.py', '**/steps/**/*.py'],
         '.js': ['**/step_definitions/**/*.js', '**/steps/**/*.js'],
         '.ts': ['**/step_definitions/**/*.ts', '**/steps/**/*.ts'],
