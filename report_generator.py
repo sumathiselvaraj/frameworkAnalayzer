@@ -260,7 +260,6 @@ def generate_scoring_guide(results, project_path):
     
     enhancer_status = [
         ["Feature", "Status"],
-        ["Maven Structure", "✓ Implemented" if enhancers.get('maven_structure', False) else "✗ Not Found"],
         ["TestNG Config", "✓ Implemented" if enhancers.get('testng_config', False) else "✗ Not Found"],
         ["Page Factory", "✓ Implemented" if enhancers.get('page_factory', False) else "✗ Not Found"],
         ["Logging", "✓ Implemented" if enhancers.get('logging_implementation', False) else "✗ Not Found"],
