@@ -282,18 +282,24 @@ def analyze_step_definitions(project_path, results):
     # Get global variable to check if using sample project
     global using_sample
     
-    # Get Java step definition files
-    java_step_files = list(project_path.glob('**/stepDefinitions/*.java'))
-    java_step_count = len(java_step_files)
-    results['step_definitions']['java_steps_count'] = java_step_count
-
     # Look for step definition files recursively  
     step_files = []
     step_patterns = {
-        '.java': ['**/stepDefinitions/*.java'],
+        '.java': ['**/stepDefinitions/*.java', '**/stepdefinitions/*.java'],
         '.py': ['**/step_definitions/**/*.py', '**/steps/**/*.py'],
         '.js': ['**/step_definitions/**/*.js', '**/steps/**/*.js'],
         '.ts': ['**/step_definitions/**/*.ts', '**/steps/**/*.ts'],
+    }
+    
+    # Get Java step definition files specifically
+    java_step_files = []
+    for pattern in step_patterns['.java']:
+        java_step_files.extend(list(project_path.glob(pattern)))
+    
+    # Set the count
+    java_step_count = len(java_step_files)
+    results['step_definitions']['java_steps_count'] = java_step_count
+    results['step_definitions']['count'] = java_step_count  # Set total count
         '.rb': ['**/step_definitions/**/*.rb', '**/steps/**/*.rb'],
         '.cs': ['**/StepDefinitions/**/*.cs', '**/Steps/**/*.cs']
     }
