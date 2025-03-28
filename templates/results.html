@@ -77,6 +77,16 @@
                     <div class="score-value">{{ results.step_definitions.quality_score }}</div>
                     <div class="score-details">
                         <h3 class="score-title">Step Definitions</h3>
+                        
+<div class="score-details">
+                        <h3 class="score-title">Browser & Execution</h3>
+                        <p class="score-description">
+                            Browser Compatibility: {{ results.browser_execution.browser_compatibility }}%<br>
+                            Grid Support: {% if results.browser_execution.grid_support %}Implemented{% else %}Missing{% endif %}<br>
+                            Parallel Execution: {% if results.browser_execution.parallel_execution %}Implemented{% else %}Missing{% endif %}<br>
+                            Retry Mechanism: {% if results.browser_execution.retry_mechanism %}Implemented{% else %}Missing{% endif %}
+                        </p>
+</div>
                         <p class="score-description">We analyzed {{ results.step_definitions.count }} step definition files{% if results.step_definitions.java_steps_count %}, including {{ results.step_definitions.java_steps_count }} Java step definition files{% endif %}.</p>
                         
                         {% if results.step_definitions.metrics %}
