@@ -225,6 +225,26 @@ def generate_scoring_guide(results, project_path):
     content.append(selenium_table)
     content.append(Spacer(1, 0.2 * inch))
 
+    # Browser Execution Section
+    content.append(Paragraph("Browser Execution Analysis", heading_style))
+    
+    browser_metrics = [
+        ("Browser Compatibility", f"{results['browser_execution']['browser_compatibility']}%"),
+        ("Grid Support", "Implemented" if results['browser_execution']['grid_support'] else "Missing"),
+        ("Parallel Execution", "Implemented" if results['browser_execution']['parallel_execution'] else "Missing"),
+        ("Retry Mechanism", "Implemented" if results['browser_execution']['retry_mechanism'] else "Missing")
+    ]
+    
+    browser_table = Table(browser_metrics, colWidths=[3 * inch, 1 * inch])
+    browser_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.purple),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+    ]))
+    
+    content.append(browser_table)
+    content.append(Spacer(1, 0.2 * inch))
+
     # Framework Structure Section
     content.append(Paragraph("Framework Structure Analysis", heading_style))
     
