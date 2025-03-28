@@ -1,65 +1,112 @@
 package selenium.pages;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+
 import java.util.List;
 
+/**
+ * Page object for the search results page
+ */
 public class SearchResultsPage extends BasePage {
-    // Locators
-    private By searchResults = By.className("search-results");
-    private By resultItems = By.className("product-item");
-    private By noResultsMessage = By.className("no-results-message");
-    private By resultTitle = By.className("result-title");
-    private By categoryFilter = By.id("categoryFilter");
-    private By activeFilter = By.className("active-filter");
+    // Page elements
+    @FindBy(className = "search-result-item")
+    private List<WebElement> searchResultItems;
     
+    @FindBy(id = "search-count")
+    private WebElement searchCountLabel;
+    
+    @FindBy(id = "sort-dropdown")
+    private WebElement sortDropdown;
+    
+    @FindBy(id = "filter-button")
+    private WebElement filterButton;
+    
+    @FindBy(className = "pagination-link")
+    private List<WebElement> paginationLinks;
+    
+    @FindBy(className = "no-results-message")
+    private WebElement noResultsMessage;
+    
+    /**
+     * Constructor for SearchResultsPage
+     * @param driver WebDriver instance
+     */
     public SearchResultsPage(WebDriver driver) {
         super(driver);
     }
     
-    public boolean hasResults() {
-        try {
-            return !driver.findElements(resultItems).isEmpty();
-        } catch (Exception e) {
-            return false;
-        }
+    /**
+     * Get search result count
+     * @return Number of search results
+     */
+    public int getSearchResultCount() {
+        return waitForElementsToBeVisible(searchResultItems).size();
     }
     
-    public String getMessageText() {
-        if (isElementDisplayed(noResultsMessage)) {
-            return getText(noResultsMessage);
-        }
-        return "";
+    /**
+     * Get search count text
+     * @return Search count text
+     */
+    public String getSearchCountText() {
+        return waitForElementToBeVisible(searchCountLabel).getText();
     }
     
-    public boolean resultsTitleContains(String searchTerm) {
-        List<WebElement> titles = driver.findElements(resultTitle);
-        
-        for (WebElement title : titles) {
-            if (title.getText().toLowerCase().contains(searchTerm.toLowerCase())) {
-                return true;
+    /**
+     * Click on search result by index
+     * @param index Index of the search result to click (0-based)
+     * @return ItemDetailPage instance
+     */
+    public ItemDetailPage clickSearchResult(int index) {
+        waitForElementsToBeVisible(searchResultItems);
+        if (index < searchResultItems.size()) {
+            scrollToElement(searchResultItems.get(index));
+            waitForElementToBeClickable(searchResultItems.get(index)).click();
+            return new ItemDetailPage(driver);
+        }
+        throw new IndexOutOfBoundsException("Search result index out of bounds");
+    }
+    
+    /**
+     * Click sort dropdown
+     * @return SearchResultsPage instance for method chaining
+     */
+    public SearchResultsPage clickSortDropdown() {
+        waitForElementToBeClickable(sortDropdown).click();
+        return this;
+    }
+    
+    /**
+     * Click filter button
+     * @return FilterPage instance
+     */
+    public FilterPage clickFilterButton() {
+        waitForElementToBeClickable(filterButton).click();
+        return new FilterPage(driver);
+    }
+    
+    /**
+     * Navigate to page by page number
+     * @param pageNumber Page number to navigate to (1-based)
+     * @return SearchResultsPage instance for method chaining
+     */
+    public SearchResultsPage navigateToPage(int pageNumber) {
+        waitForElementsToBeVisible(paginationLinks);
+        for (WebElement link : paginationLinks) {
+            if (link.getText().trim().equals(String.valueOf(pageNumber))) {
+                waitForElementToBeClickable(link).click();
+                return this;
             }
         }
-        
-        return false;
+        throw new IllegalArgumentException("Page number not found in pagination");
     }
     
-    public void filterByCategory(String category) {
-        // Finds the category filter dropdown
-        click(categoryFilter);
-        
-        // Find the category option by text
-        By categoryOption = By.xpath("//option[contains(text(),'" + category + "')]");
-        waitForElementVisible(categoryOption);
-        click(categoryOption);
-    }
-    
-    public boolean isFilteredByCategory(String category) {
-        if (!isElementDisplayed(activeFilter)) {
-            return false;
-        }
-        
-        return getText(activeFilter).contains(category);
+    /**
+     * Check if no results message is displayed
+     * @return true if no results message is displayed, false otherwise
+     */
+    public boolean isNoResultsMessageDisplayed() {
+        return isElementDisplayed(noResultsMessage);
     }
 }

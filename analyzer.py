@@ -1008,19 +1008,30 @@ def analyze_page_objects(project_path, results):
     base_page_pattern = False
     proper_encapsulation = False
     
-    # Patterns for analysis
-    page_object_patterns = [
-        r'class\s+\w*Page', 
-        r'class\s+\w*Screen',
-        r'class\s+\w*PageObject',
-        r'extends\s+\w*Page',
-        r'PageFactory\.initElements'
+    # Track unique page object classes to avoid duplicates
+    unique_page_objects = set()
+    
+    # Improved patterns for page object detection
+    class_patterns = [
+        r'class\s+(\w+Page)\b',  # Matches 'class LoginPage'
+        r'class\s+(\w+Screen)\b',  # Matches 'class HomeScreen'
+        r'class\s+(\w+PageObject)\b',  # Matches 'class LoginPageObject'
+        r'class\s+(\w+View)\b',  # Matches 'class ProfileView'
+        r'class\s+(\w+Fragment)\b',  # Matches 'class LoginFragment' (Android)
+        r'class\s+(\w+Activity)\b'  # Matches 'class LoginActivity' (Android)
+    ]
+    
+    # Extended patterns for inheritance-based page objects
+    inheritance_patterns = [
+        r'class\s+(\w+)\s+extends\s+\w*Page',  # Java/TypeScript extends
+        r'class\s+(\w+)\s+:\s+\w*Page',  # C# inheritance
+        r'class\s+(\w+)\s*\(\w*Page\)',  # Python inheritance
     ]
     
     base_page_patterns = [
         r'class\s+BasePage',
         r'class\s+AbstractPage',
-        r'class\s+Page\s*\{',
+        r'class\s+Page\s*[:{(]',
         r'abstract\s+class\s+\w*Page',
         r'extends\s+BasePage',
         r'super\s*\(',
@@ -1038,17 +1049,38 @@ def analyze_page_objects(project_path, results):
         r'set\w+\s*\('
     ]
     
+    logger.debug(f"Analyzing page objects in {len(code_files)} files")
+    
     for file_path in code_files:
         try:
+            # Skip files with test in the name but not PageTest
+            if ('test' in str(file_path).lower() and 'pagetest' not in str(file_path).lower()):
+                continue
+                
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
                 
-                # Check for page objects
-                for pattern in page_object_patterns:
-                    page_matches = re.findall(pattern, content)
-                    if page_matches:
+                # Look for page object class declarations
+                for pattern in class_patterns:
+                    for match in re.finditer(pattern, content):
+                        page_object_name = match.group(1)
+                        unique_page_objects.add(page_object_name)
                         has_page_objects = True
-                        total_page_objects += len(page_matches)
+                
+                # Look for page objects through inheritance
+                for pattern in inheritance_patterns:
+                    for match in re.finditer(pattern, content):
+                        page_object_name = match.group(1)
+                        unique_page_objects.add(page_object_name)
+                        has_page_objects = True
+                
+                # Special case for PageFactory in Java
+                if 'PageFactory.initElements' in content:
+                    # If we find PageFactory initialization, identify the class it's in
+                    class_match = re.search(r'class\s+(\w+)', content)
+                    if class_match:
+                        unique_page_objects.add(class_match.group(1))
+                        has_page_objects = True
                 
                 # Check for base page pattern
                 if not base_page_pattern:
@@ -1072,6 +1104,9 @@ def analyze_page_objects(project_path, results):
             logger.error(f"Error analyzing page objects in {file_path}: {str(e)}")
     
     # Set results
+    total_page_objects = len(unique_page_objects)
+    logger.debug(f"Found {total_page_objects} unique page objects: {', '.join(unique_page_objects)}")
+    
     results['page_objects']['has_page_objects'] = has_page_objects
     results['page_objects']['total_page_objects'] = total_page_objects
     results['page_objects']['base_page_pattern'] = base_page_pattern

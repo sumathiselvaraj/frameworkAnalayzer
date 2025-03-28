@@ -1,53 +1,112 @@
 package selenium.pages;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 
+/**
+ * Page object for the login page
+ */
 public class LoginPage extends BasePage {
-    // Locators
-    private By usernameField = By.id("username");
-    private By passwordField = By.id("password");
-    private By loginButton = By.id("loginBtn");
-    private By errorMessage = By.className("error-message");
-    private By loginForm = By.id("loginForm");
+    // Page elements
+    @FindBy(id = "username")
+    private WebElement usernameField;
     
+    @FindBy(id = "password")
+    private WebElement passwordField;
+    
+    @FindBy(id = "login-button")
+    private WebElement loginButton;
+    
+    @FindBy(className = "error-message")
+    private WebElement errorMessage;
+    
+    @FindBy(linkText = "Forgot Password?")
+    private WebElement forgotPasswordLink;
+    
+    @FindBy(linkText = "Sign Up")
+    private WebElement signUpLink;
+    
+    /**
+     * Constructor for LoginPage
+     * @param driver WebDriver instance
+     */
     public LoginPage(WebDriver driver) {
         super(driver);
     }
     
-    public void navigateToLoginPage() {
-        driver.get("https://example.com/login");
-        waitForElementVisible(loginForm);
+    /**
+     * Enter username
+     * @param username Username to enter
+     * @return LoginPage instance for method chaining
+     */
+    public LoginPage enterUsername(String username) {
+        clearAndType(usernameField, username);
+        return this;
     }
     
-    public void enterUsername(String username) {
-        type(usernameField, username);
+    /**
+     * Enter password
+     * @param password Password to enter
+     * @return LoginPage instance for method chaining
+     */
+    public LoginPage enterPassword(String password) {
+        clearAndType(passwordField, password);
+        return this;
     }
     
-    public void enterPassword(String password) {
-        type(passwordField, password);
+    /**
+     * Click login button
+     * @return DashboardPage instance if login successful
+     */
+    public DashboardPage clickLoginButton() {
+        waitForElementToBeClickable(loginButton).click();
+        return new DashboardPage(driver);
     }
     
-    public void clickLoginButton() {
-        click(loginButton);
-    }
-    
-    public String getErrorMessage() {
-        try {
-            return getText(errorMessage);
-        } catch (Exception e) {
-            return "";
-        }
-    }
-    
-    public boolean isCurrentPage() {
-        return driver.getCurrentUrl().contains("/login") && 
-               isElementDisplayed(loginForm);
-    }
-    
-    public void login(String username, String password) {
+    /**
+     * Perform login with credentials
+     * @param username Username to enter
+     * @param password Password to enter
+     * @return DashboardPage instance if login successful
+     */
+    public DashboardPage login(String username, String password) {
         enterUsername(username);
         enterPassword(password);
-        clickLoginButton();
+        return clickLoginButton();
+    }
+    
+    /**
+     * Get error message text
+     * @return Error message text
+     */
+    public String getErrorMessage() {
+        return waitForElementToBeVisible(errorMessage).getText();
+    }
+    
+    /**
+     * Check if error message is displayed
+     * @return true if error message is displayed, false otherwise
+     */
+    public boolean isErrorMessageDisplayed() {
+        return isElementDisplayed(errorMessage);
+    }
+    
+    /**
+     * Click forgot password link
+     * @return ForgotPasswordPage instance
+     */
+    public ForgotPasswordPage clickForgotPasswordLink() {
+        waitForElementToBeClickable(forgotPasswordLink).click();
+        return new ForgotPasswordPage(driver);
+    }
+    
+    /**
+     * Click sign up link
+     * @return SignUpPage instance
+     */
+    public SignUpPage clickSignUpLink() {
+        waitForElementToBeClickable(signUpLink).click();
+        return new SignUpPage(driver);
     }
 }
