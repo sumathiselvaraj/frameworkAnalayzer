@@ -783,7 +783,7 @@ def analyze_framework_architecture(project_path, results):
 
     # Set the results
     results['framework_architecture']['base_class_implementation'] = base_class_implementation
-    results['framework_architecture']['data_driven_approach'] = data_driven_approach
+    results['framework_architecture']['data_driven_approach']= data_driven_approach
     results['framework_architecture']['framework_scalability'] = framework_scalability
     results['framework_architecture']['method_quality'] = method_quality
 
@@ -1171,12 +1171,24 @@ def analyze_browser_execution(project_path, results):
                             parallel_execution = True
                             break
 
-                # Check for retry mechanism
+                # Check for retry mechanism - must have both RetryAnalyzer and proper TestNG config
                 if not retry_mechanism:
+                    has_retry_analyzer = False
+                    has_retry_config = False
+
+                    # Check for RetryAnalyzer implementation
                     for pattern in retry_patterns:
                         if re.search(pattern, content):
-                            retry_mechanism = True
+                            has_retry_analyzer = True
                             break
+
+                    # Look specifically for TestNG retry configuration
+                    if re.search(r'setRetryAnalyzer|IRetryAnalyzer', content) and \
+                       re.search(r'@Test\s*\([^)]*retryAnalyzer', content):
+                        has_retry_config = True
+
+                    # Only set retry_mechanism to true if both conditions are met
+                    retry_mechanism = has_retry_analyzer and has_retry_config
         except Exception as e:
             logger.error(f"Error analyzing browser execution in {file_path}: {str(e)}")
 
