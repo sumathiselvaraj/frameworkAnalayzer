@@ -288,31 +288,28 @@ def analyze_step_definitions(project_path, results):
         step_files.extend(list(project_path.glob(f'**/*steps*{ext}')))
         step_files.extend(list(project_path.glob(f'**/*step_definitions*{ext}')))
 
-    # Count all step definition files including nested ones
-    step_files_count = 0
-    step_files = set()
-    
-    # Common step definition patterns
-    patterns = [
-        '*Steps*',
-        '*StepDefinition*',
-        '*Step_Definition*',
-        '*StepDef*',
-        '*_steps*',
-        '*_step_definitions*',
-        '*stepdef*',
-        '*Batch*Steps*',
-        '*TestSteps*',
-        '*Validation*'
-    ]
-    
-    # Search for files with these patterns
+    # Look specifically in stepDefinition/stepDefinitions directories
+    step_files = []
     for ext in ['.py', '.js', '.ts', '.rb', '.java', '.cs']:
-        for pattern in patterns:
-            found_files = list(project_path.glob(f'**/{pattern}{ext}'))
-            step_files.update(found_files)
+        step_files.extend(list(project_path.glob('**/stepDefinition/**/*' + ext)))
+        step_files.extend(list(project_path.glob('**/stepDefinitions/**/*' + ext)))
+        step_files.extend(list(project_path.glob('**/step_definition/**/*' + ext)))
+        step_files.extend(list(project_path.glob('**/step_definitions/**/*' + ext)))
     
+    # Count unique step definition files
+    step_files = list(set(step_files))
     step_files_count = len(step_files)
+    
+    # Count @ annotations in step definition files
+    total_steps = 0
+    parameterized_steps = 0
+    
+    # Patterns for step annotations in different languages
+    annotation_patterns = [
+        r'@(?:Given|When|Then|And|But)\s*[\(\s]',  # Java, Python
+        r'@(?:given|when|then|and|but)\s*[\(\s]',  # Case insensitive
+        r'@Step\s*[\(\s]'  # General step annotation
+    ]
 
     # Count step definitions with @ annotations
     total_steps = 0
