@@ -1453,30 +1453,81 @@ def analyze_project_enhancers(results, project_path):
         'custom_reporting': False
     }
 
-    # Check for Maven structure and TestNG configuration in project path
-    if os.path.exists(os.path.join(project_path, 'pom.xml')):
+    # Check for Maven structure
+    pom_file = os.path.join(project_path, 'pom.xml')
+    if os.path.exists(pom_file):
         enhancers['maven_structure'] = True
-
-    if os.path.exists(os.path.join(project_path, 'testng.xml')):
-        enhancers['testng_config'] = True
-
-    # Look for common patterns in source files and pom.xml
-    pom_path = os.path.join(project_path, 'pom.xml')
-    if os.path.exists(pom_path):
+        # Read pom.xml content
         try:
-            with open(pom_path, 'r', encoding='utf-8') as f:
-                pom_content = f.read()
-                # Check dependencies in pom.xml
-                if 'org.testng' in pom_content:
+            with open(pom_file, 'r', encoding='utf-8') as f:
+                pom_content = f.read().lower()
+                # Check for TestNG
+                if 'org.testng' in pom_content or os.path.exists(os.path.join(project_path, 'testng.xml')):
                     enhancers['testng_config'] = True
-                if 'log4j' in pom_content or 'slf4j' in pom_content:
+                # Check for logging frameworks
+                if any(logger in pom_content for logger in ['log4j', 'slf4j', 'logback']):
                     enhancers['logging_implementation'] = True
-                if 'apache.poi' in pom_content:
+                # Check for data driven dependencies
+                if any(dd in pom_content for dd in ['apache.poi', 'excel', 'testdata']):
                     enhancers['data_driven_testing'] = True
-                if 'extentreports' in pom_content:
+                # Check for reporting tools
+                if any(report in pom_content for report in ['extentreports', 'allure', 'reportng']):
                     enhancers['custom_reporting'] = True
         except Exception as e:
             logger.error(f"Error reading pom.xml: {str(e)}")
+
+    # Scan all Java source files for implementations
+    for root, _, files in os.walk(project_path):
+        for file in files:
+            if file.endswith('.java'):
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read().lower()
+                        
+                        # Check for Page Factory
+                        if any(pf in content for pf in [
+                            'pagefactory', 
+                            '@findby', 
+                            'initelements'
+                        ]):
+                            enhancers['page_factory'] = True
+                            
+                        # Check for logging
+                        if any(log in content for log in [
+                            'logger', 
+                            'log4j',
+                            'slf4j',
+                            'logback',
+                            'getlogger'
+                        ]):
+                            enhancers['logging_implementation'] = True
+                            
+                        # Check for data driven testing
+                        if any(dd in content for dd in [
+                            'dataprovider',
+                            'testdata',
+                            'excel',
+                            'csv',
+                            'jsondata',
+                            '@test(dataProvider'
+                        ]):
+                            enhancers['data_driven_testing'] = True
+                            
+                        # Check for custom reporting
+                        if any(report in content for report in [
+                            'extentreports',
+                            'allure',
+                            'reportng',
+                            'extent.html',
+                            'test.createnode',
+                            'test.log'
+                        ]):
+                            enhancers['custom_reporting'] = True
+                            
+                except Exception as e:
+                    logger.debug(f"Error reading Java file {file}: {str(e)}")
+                    continue
 
     for root, _, files in os.walk(project_path):
         for file in files:
