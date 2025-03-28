@@ -314,13 +314,41 @@ def analyze_step_definitions(project_path, results):
     
     step_files_count = len(step_files)
 
-    # If using sample project, return the actual count from screenshot
+    # Count step definitions with @ annotations
+    total_steps = 0
+    parameterized_steps = 0
+    
+    # Patterns for step annotations in different languages
+    annotation_patterns = [
+        r'@(?:given|when|then|and|but)\s*\(',  # Python
+        r'@(?:Given|When|Then|And|But)\s*\(',  # Java
+        r'^\s*(?:Given|When|Then|And|But)\s*\(',  # JavaScript/TypeScript
+        r'@(?:Step|Given|When|Then|And|But)',  # General BDD annotations
+    ]
+    
+    # If using sample project, analyze step definitions from actual files
+    for file_path in step_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                # Count occurrences of step annotations
+                for pattern in annotation_patterns:
+                    matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE)
+                    total_steps += len(matches)
+                    # Check for parameterized steps
+                    parameterized = re.findall(pattern + r'[^)]*<[^>]+>[^)]*\)', content, re.IGNORECASE | re.MULTILINE)
+                    parameterized_steps += len(parameterized)
+        except Exception as e:
+            logger.error(f"Error reading step file: {e}")
+    
     if using_sample:
-        step_files_count = 26  # Actual count from screenshot
-        # Set the actual step count for sample project
-        total_steps = 26  # As per screenshot
-        parameterized_steps = 16  # As per screenshot showing 16 parameterized steps
-    results['step_definitions']['count'] = step_files_count
+        # Override with actual values from project analysis
+        step_files_count = len(step_files)
+        results['step_definitions']['count'] = step_files_count
+        results['step_definitions']['metrics'] = {
+            'total_steps': total_steps,
+            'parameterized_steps': parameterized_steps
+        }
 
     if len(step_files) == 0:
         results['step_definitions']['issues'].append("No step definition files found")
