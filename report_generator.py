@@ -190,8 +190,9 @@ def generate_scoring_guide(results, project_path):
     # Recommendations Section (from original)
     story.append(Paragraph("Recommendations", styles['Heading2']))
 
-    if results['recommendations']:
-        for i, recommendation in enumerate(results['recommendations'], 1):
+    recommendations = results.get('recommendations', [])
+    if recommendations:
+        for i, recommendation in enumerate(recommendations, 1):
             story.append(Paragraph(f"{i}. {recommendation}", styles['Normal']))
             story.append(Spacer(1, 0.1 * inch))
     else:
