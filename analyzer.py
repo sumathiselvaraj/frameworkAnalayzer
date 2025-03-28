@@ -783,7 +783,7 @@ def analyze_framework_architecture(project_path, results):
 
     # Set the results
     results['framework_architecture']['base_class_implementation'] = base_class_implementation
-    results['framework_architecture']['data_driven_approach']= data_driven_approach
+    results['framework_architecture']['data_drivenapproach']= data_driven_approach
     results['framework_architecture']['framework_scalability'] = framework_scalability
     results['framework_architecture']['method_quality'] = method_quality
 
@@ -1164,11 +1164,15 @@ def analyze_browser_execution(project_path, results):
                             grid_support = True
                             break
 
-                # Check for parallel execution
+                # Check for parallel execution in TestNG config
                 if not parallel_execution:
+                    # Check if parallel or thread-count is configured
+                    if any(p in content.lower() for p in ["parallel=", "thread-count", "data-provider-thread-count"]):
+                        parallel_execution = False  # Set to false since this is just config
+                    # Look for actual parallel implementation
                     for pattern in parallel_patterns:
                         if re.search(pattern, content):
-                            parallel_execution = True
+                            parallel_execution = False  # Set to false since found but may not be properly implemented
                             break
 
                 # Check for retry mechanism - must have both RetryAnalyzer and proper TestNG config
