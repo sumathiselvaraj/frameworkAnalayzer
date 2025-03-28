@@ -1177,10 +1177,21 @@ def analyze_browser_execution(project_path, results):
 
                 # Check for retry mechanism
                 if not retry_mechanism:
-                    # Look for RetryAnalyzer implementation and usage
-                    if re.search(r'implements\s+IRetryAnalyzer', content) and \
-                       re.search(r'retry\s*\(\s*ITestResult', content):
-                        retry_mechanism = True
+                    # Look for RetryAnalyzer implementation and configuration
+                    has_retry_analyzer = (
+                        re.search(r'implements\s+IRetryAnalyzer', content) or
+                        re.search(r'extends\s+RetryAnalyzer', content) or
+                        re.search(r'@Retry', content) or
+                        re.search(r'setRetryAnalyzer', content)
+                    )
+                    
+                    has_retry_config = (
+                        re.search(r'@Test\s*\([^)]*retryAnalyzer', content) or
+                        re.search(r'retryCount|maxRetryCount', content) or
+                        re.search(r'retry-count|retry_count', content)
+                    )
+                    
+                    retry_mechanism = has_retry_analyzer and has_retry_config
 
         except Exception as e:
             logger.error(f"Error analyzing browser execution in {file_path}: {str(e)}")
