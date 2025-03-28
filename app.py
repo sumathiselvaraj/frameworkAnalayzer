@@ -23,7 +23,7 @@ def analyze():
     Process the project path and analyze the BDD framework.
     Returns analysis results or error message.
     """
-    project_path = request.form.get('project_path')
+    project_path = "sample_bdd_project"
 
     if not project_path:
         flash('Please enter a project path', 'error')
