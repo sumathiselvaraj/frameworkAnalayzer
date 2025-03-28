@@ -252,6 +252,18 @@ body {
   border-radius: 50%;
 }
 
+.nested-list {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+  color: var(--primary-dark);
+}
+
+.nested-list li {
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+}
+
 .issues-list {
   margin: 1rem 0;
   padding: 0;

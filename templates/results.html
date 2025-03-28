@@ -129,6 +129,28 @@
                         <ul class="metric-list">
                             <li class="metric-item">Found {{ results.framework_structure.metrics.found_directories }} out of {{ results.framework_structure.metrics.expected_directories|length }} recommended directories</li>
                             <li class="metric-item">Has configuration files: {{ "Yes" if results.framework_structure.metrics.has_config else "No" }}</li>
+                            
+                            {% if results.framework_structure.metrics.found_config_files %}
+                            <li class="metric-item">
+                                <strong>Configuration files found:</strong>
+                                <ul class="nested-list">
+                                    {% for file in results.framework_structure.metrics.found_config_files %}
+                                    <li>{{ file }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endif %}
+                            
+                            {% if results.framework_structure.metrics.missing_directories %}
+                            <li class="metric-item">
+                                <strong>Recommended directories not found:</strong>
+                                <ul class="nested-list">
+                                    {% for dir in results.framework_structure.metrics.missing_directories %}
+                                    <li>{{ dir }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endif %}
                         </ul>
                         {% endif %}
                         
