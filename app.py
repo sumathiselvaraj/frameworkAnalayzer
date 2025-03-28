@@ -25,10 +25,13 @@ def analyze():
     Process the project path and analyze the BDD framework.
     Returns analysis results or error message.
     """
-    project_path = "Team02_SeleniumNinjas"
-
+    project_path = request.form.get('project_path', '')
+    
     if not project_path:
-        flash('Please enter a project path', 'error')
+        project_path = "Team02_SeleniumNinjas"  # Default path if none provided
+
+    if not os.path.exists(project_path):
+        flash('Project path does not exist', 'error')
         return redirect(url_for('index'))
 
     try:

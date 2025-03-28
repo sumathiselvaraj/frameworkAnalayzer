@@ -1442,7 +1442,7 @@ def analyze_project_strengths(results):
 
     results['project_strengths'] = strengths
 
-def analyze_project_enhancers(results):
+def analyze_project_enhancers(results, project_path):
     """Analyze additional project enhancers and features."""
     enhancers = {
         'maven_structure': False,
@@ -1453,19 +1453,10 @@ def analyze_project_enhancers(results):
         'custom_reporting': False
     }
 
-    # Check for Maven structure
-    if os.path.exists('pom.xml'):
-        enhancers['maven_structure'] = True
-
-    # Check for TestNG configuration
-    if os.path.exists('testng.xml'):
-        enhancers['testng_config'] = True
-
-    # Check for Maven structure
+    # Check for Maven structure and TestNG configuration in project path
     if os.path.exists(os.path.join(project_path, 'pom.xml')):
         enhancers['maven_structure'] = True
 
-    # Check for TestNG configuration
     if os.path.exists(os.path.join(project_path, 'testng.xml')):
         enhancers['testng_config'] = True
 
