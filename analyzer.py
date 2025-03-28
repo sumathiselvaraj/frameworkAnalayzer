@@ -282,56 +282,38 @@ def analyze_step_definitions(project_path, results):
     # Get global variable to check if using sample project
     global using_sample
 
-    # Look for common step definition file extensions in various BDD frameworks
+    # Look for step definition files recursively
     step_files = []
-    for ext in ['.py', '.js', '.ts', '.rb', '.java', '.cs']:
-        step_files.extend(list(project_path.glob(f'**/*steps*{ext}')))
-        step_files.extend(list(project_path.glob(f'**/*step_definitions*{ext}')))
-
-    # Look specifically in stepDefinition/stepDefinitions directories
-    step_files = []
-    
-    # Define step definition patterns
     step_patterns = {
-        '.java': ['**/*Steps.java', '**/stepDefinitions/**/*.java', '**/step_definitions/**/*.java'],
-        '.py': ['**/step_defs/**/*.py', '**/steps/**/*.py', '**/step_definitions/**/*.py'],
+        '.java': ['**/stepDefinition/**/*.java', '**/stepDefinitions/**/*.java', '**/steps/**/*.java'],
+        '.py': ['**/step_definitions/**/*.py', '**/steps/**/*.py'],
         '.js': ['**/step_definitions/**/*.js', '**/steps/**/*.js'],
         '.ts': ['**/step_definitions/**/*.ts', '**/steps/**/*.ts'],
         '.rb': ['**/step_definitions/**/*.rb', '**/steps/**/*.rb'],
-        '.cs': ['**/Steps/**/*.cs', '**/StepDefinitions/**/*.cs']
+        '.cs': ['**/StepDefinitions/**/*.cs', '**/Steps/**/*.cs']
     }
-    
+
     # Find all step definition files
     for ext, patterns in step_patterns.items():
         for pattern in patterns:
             step_files.extend(list(project_path.glob(pattern)))
-    
+
     # Remove duplicates and filter out non-step files
-    step_files = [f for f in set(step_files) if not any(x in f.name.lower() for x in ['test', 'hook', 'config', 'helper'])]
-    
+    step_files = [f for f in set(step_files) if (
+        'steps' in f.name.lower() or 
+        'step' in f.name.lower()
+    ) and not any(x in f.name.lower() for x in ['hook', 'config', 'helper'])]
+
     # Count step definition files
     if using_sample:
-        # Use exact count from actual project
         step_files_count = 26  # Actual count from user's project
     else:
-        # Count files based on patterns and extensions
         step_files_count = len(step_files)
-    
+
     # Count @ annotations in step definition files
     total_steps = 0
     parameterized_steps = 0
-    
-    # Patterns for step annotations in different languages
-    annotation_patterns = [
-        r'@(?:Given|When|Then|And|But)\s*[\(\s]',  # Java, Python
-        r'@(?:given|when|then|and|but)\s*[\(\s]',  # Case insensitive
-        r'@Step\s*[\(\s]'  # General step annotation
-    ]
 
-    # Count step definitions with @ annotations
-    total_steps = 0
-    parameterized_steps = 0
-    
     # Patterns for step annotations in different languages
     annotation_patterns = [
         r'@(?:given|when|then|and|but)\s*\(',  # Python
@@ -339,7 +321,7 @@ def analyze_step_definitions(project_path, results):
         r'^\s*(?:Given|When|Then|And|But)\s*\(',  # JavaScript/TypeScript
         r'@(?:Step|Given|When|Then|And|But)',  # General BDD annotations
     ]
-    
+
     # If using sample project, analyze step definitions from actual files
     for file_path in step_files:
         try:
@@ -354,7 +336,7 @@ def analyze_step_definitions(project_path, results):
                     parameterized_steps += len(parameterized)
         except Exception as e:
             logger.error(f"Error reading step file: {e}")
-    
+
     if using_sample:
         # Override with actual values from project analysis
         step_files_count = len(step_files)
