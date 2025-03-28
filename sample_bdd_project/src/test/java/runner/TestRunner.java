@@ -24,7 +24,7 @@ import utils.RetryAnalyzer;
     monochrome = true,
     dryRun = false
 )
-@Listeners(RetryAnalyzer.class)
+@Listeners(RetryConfig.class)
 public class TestRunner {
     // This class doesn't need any code as it's just a runner
 }
